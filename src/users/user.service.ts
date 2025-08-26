@@ -1,34 +1,72 @@
-import { Injectable } from '@nestjs/common';
-import { User } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { User, UserDocument } from './user.schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { hashPlainText } from '@/utils/hashPlainText';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({ relations: ['providers'] });
+  async getProfile(id: string) {
+    const user = await this.userModel.findById(id).lean<UserDocument>();
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy tài khoản');
+    }
+    const { providers, ...result } = user;
+    return {
+      message: 'Lấy thông tin thành công',
+      user: result,
+    };
   }
 
-  async register(dto: CreateUserDto) {
-    const passwordHashed = await hashPlainText(dto.password);
-    const user = this.userRepository.create({
-      email: dto.email,
-      full_name: dto.full_name,
-      user_name: dto.user_name,
-      gender: dto.gender,
+  async findLocalByEmail(email: string) {
+    return this.userModel
+      .findOne({
+        email,
+        providers: { $elemMatch: { provider: 'local' } },
+      })
+      .lean();
+  }
+
+  async findAll(): Promise<User[]> {
+    return await this.userModel.find().populate('providers');
+  }
+  async isEmailExist(email: string) {
+    const user = await this.userModel.findOne({ email }).lean();
+    if (user) {
+      return true;
+    }
+    return false;
+  }
+
+  async create(dto: CreateUserDto) {
+    const isEmailExist = await this.isEmailExist(dto.email);
+    if (isEmailExist) {
+      throw new ConflictException('Email đã tồn tại');
+    }
+    const { email, full_name, user_name, gender, password } = dto;
+    const passwordHashed = await hashPlainText(password);
+    const user = this.userModel.create({
+      email,
+      full_name,
+      user_name,
+      gender,
       providers: [
         {
           password: passwordHashed,
         },
       ],
     });
-    return this.userRepository.save(user);
+    (await user).save();
+    return 'Đăng ký thành công';
   }
 }
