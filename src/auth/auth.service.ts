@@ -1,15 +1,18 @@
 import { CreateUserDto } from '@/users/dtos/create-user.dto';
 import { UserService } from '@/users/user.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { compareHash } from '@/utils/compareHash';
 import { JwtService } from '@nestjs/jwt';
 import { UserDocument } from '@/users/user.schema';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './types/jwt-payload';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -22,14 +25,50 @@ export class AuthService {
     return user;
   }
 
+  async refreshToken(refresh_token: string) {
+    if (!refresh_token) {
+      throw new UnauthorizedException('Không có refresh token');
+    }
+    let user: UserDocument | null = null;
+    try {
+      const payload: JwtPayload = await this.jwtService.verifyAsync(
+        refresh_token,
+        {
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        },
+      );
+      user = await this.userService.findOne({ _id: payload.sub });
+    } catch {
+      throw new UnauthorizedException('Token không hợp lệ!!');
+    }
+    if (!user) {
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
+    const refresh_token_user = user.refresh_token;
+
+    if (!refresh_token_user) {
+      throw new UnauthorizedException('Không tìm thấy token');
+    } else if (refresh_token_user !== refresh_token) {
+      throw new UnauthorizedException('Token không hợp lệ');
+    }
+    const access_token = await this.jwtService.signAsync({
+      _id: user._id.toString(),
+      email: user.email,
+    });
+    return access_token;
+  }
+
   async login(user: UserDocument) {
     const payload = { sub: user._id.toString(), email: user.email };
     const access_token = await this.jwtService.signAsync(payload);
-
-    delete user.providers[0].password;
+    const refresh_token = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      expiresIn: '7d',
+    });
+    await this.userService.updateRefreshToken(user._id, refresh_token);
     return {
-      message: 'Đăng nhập thành công',
       access_token,
+      refresh_token,
     };
   }
 

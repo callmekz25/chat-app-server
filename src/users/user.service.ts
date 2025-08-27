@@ -7,7 +7,7 @@ import { User, UserDocument } from './user.schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { hashPlainText } from '@/utils/hashPlainText';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -28,6 +28,13 @@ export class UserService {
     };
   }
 
+  async updateRefreshToken(user_id: Types.ObjectId, refresh_token: string) {
+    return await this.userModel.updateOne(
+      { _id: user_id },
+      { refresh_token: refresh_token },
+    );
+  }
+
   async findLocalByEmail(email: string) {
     return this.userModel
       .findOne({
@@ -35,6 +42,9 @@ export class UserService {
         providers: { $elemMatch: { provider: 'local' } },
       })
       .lean();
+  }
+  async findOne(object: Record<string, any>) {
+    return await this.userModel.findOne(object).populate('providers').lean();
   }
 
   async findAll(): Promise<User[]> {
@@ -66,7 +76,6 @@ export class UserService {
         },
       ],
     });
-    (await user).save();
-    return 'Đăng ký thành công';
+    return (await user).save();
   }
 }
