@@ -44,15 +44,9 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Không tìm thấy người dùng');
     }
-    const refresh_token_user = user.refresh_token;
 
-    if (!refresh_token_user) {
-      throw new UnauthorizedException('Không tìm thấy token');
-    } else if (refresh_token_user !== refresh_token) {
-      throw new UnauthorizedException('Token không hợp lệ');
-    }
     const access_token = await this.jwtService.signAsync({
-      _id: user._id.toString(),
+      subarray: user._id.toString(),
       email: user.email,
     });
     return access_token;
@@ -65,7 +59,7 @@ export class AuthService {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: '7d',
     });
-    await this.userService.updateRefreshToken(user._id, refresh_token);
+
     return {
       access_token,
       refresh_token,

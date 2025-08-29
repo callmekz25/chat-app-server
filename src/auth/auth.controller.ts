@@ -14,15 +14,19 @@ export class AuthController {
     const { access_token, refresh_token } = await this.authService.login(
       req.user,
     );
+
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.json({
-      message: 'Đăng nhập thành công',
-      access_token,
+      statusCode: res.statusCode,
+      data: {
+        message: 'Đăng nhập thành công',
+        access_token,
+      },
     });
   }
 
