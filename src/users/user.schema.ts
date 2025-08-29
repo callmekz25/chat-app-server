@@ -65,9 +65,6 @@ export class User {
   @Prop({ type: Number, default: 0 })
   total_following: number;
 
-  @Prop({ type: String, default: null })
-  refresh_token: string;
-
   @Prop({ type: [UserProviderSchema], default: [] })
   providers: UserProvider[];
 }

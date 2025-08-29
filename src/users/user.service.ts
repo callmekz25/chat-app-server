@@ -28,13 +28,6 @@ export class UserService {
     };
   }
 
-  async updateRefreshToken(user_id: Types.ObjectId, refresh_token: string) {
-    return await this.userModel.updateOne(
-      { _id: user_id },
-      { refresh_token: refresh_token },
-    );
-  }
-
   async findLocalByEmail(email: string) {
     return this.userModel
       .findOne({
