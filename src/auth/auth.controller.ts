@@ -10,7 +10,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Req() req, @Res() res: Response) {
+  async login(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { access_token, refresh_token } = await this.authService.login(
       req.user,
     );
@@ -21,13 +21,7 @@ export class AuthController {
       sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    return res.json({
-      statusCode: res.statusCode,
-      data: {
-        message: 'Đăng nhập thành công',
-        access_token,
-      },
-    });
+    return { message: 'Đăng nhập thành công', access_token };
   }
 
   @Post('register')

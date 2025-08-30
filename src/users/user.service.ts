@@ -1,13 +1,13 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { User, UserDocument } from './user.schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { hashPlainText } from '@/utils/hashPlainText';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -17,14 +17,17 @@ export class UserService {
   ) {}
 
   async getProfile(id: string) {
-    const user = await this.userModel.findById(id).lean<UserDocument>();
+    const user = await this.userModel
+      .findById(id)
+      .select('-providers')
+      .lean<UserDocument>();
     if (!user) {
-      throw new NotFoundException('Không tìm thấy tài khoản');
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
     }
-    const { providers, ...result } = user;
+
     return {
       message: 'Lấy thông tin thành công',
-      user: result,
+      user,
     };
   }
 

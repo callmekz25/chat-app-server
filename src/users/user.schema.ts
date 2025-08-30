@@ -45,6 +45,9 @@ export class User {
   @Prop({ required: true })
   full_name: string;
 
+  @Prop()
+  note: string;
+
   @Prop({ type: [String], enum: Object.values(Role), default: [Role.USER] })
   roles: Role[];
   @Prop()
