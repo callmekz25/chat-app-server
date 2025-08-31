@@ -34,7 +34,9 @@ class UserProvider {
 
 const UserProviderSchema = SchemaFactory.createForClass(UserProvider);
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+})
 export class User {
   @Prop({ unique: true, required: true })
   email: string;
@@ -44,9 +46,6 @@ export class User {
 
   @Prop({ required: true })
   full_name: string;
-
-  @Prop()
-  note: string;
 
   @Prop({ type: [String], enum: Object.values(Role), default: [Role.USER] })
   roles: Role[];

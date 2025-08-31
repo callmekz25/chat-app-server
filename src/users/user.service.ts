@@ -7,7 +7,7 @@ import { User, UserDocument } from './user.schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { hashPlainText } from '@/utils/hashPlainText';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -18,9 +18,10 @@ export class UserService {
 
   async getProfile(id: string) {
     const user = await this.userModel
-      .findById(id)
+      .findById(new Types.ObjectId(id))
       .select('-providers')
-      .lean<UserDocument>();
+      .lean();
+
     if (!user) {
       throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
     }
