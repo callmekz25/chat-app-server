@@ -48,12 +48,17 @@ export class AuthService {
     const access_token = await this.jwtService.signAsync({
       sub: user._id.toString(),
       email: user.email,
+      user_name: user.user_name,
     });
     return access_token;
   }
 
   async login(user: UserDocument) {
-    const payload = { sub: user._id.toString(), email: user.email };
+    const payload = {
+      sub: user._id.toString(),
+      email: user.email,
+      user_name: user.user_name,
+    };
     const access_token = await this.jwtService.signAsync(payload);
     const refresh_token = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),

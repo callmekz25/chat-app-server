@@ -49,6 +49,10 @@ export class User {
 
   @Prop({ type: [String], enum: Object.values(Role), default: [Role.USER] })
   roles: Role[];
+
+  @Prop({ type: Boolean, default: false })
+  isPrivate: boolean;
+
   @Prop()
   avatar_url?: string;
 
@@ -65,7 +69,7 @@ export class User {
   total_followers: number;
 
   @Prop({ type: Number, default: 0 })
-  total_following: number;
+  total_followings: number;
 
   @Prop({ type: [UserProviderSchema], default: [] })
   providers: UserProvider[];

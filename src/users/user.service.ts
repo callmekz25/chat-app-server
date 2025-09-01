@@ -16,20 +16,29 @@ export class UserService {
     private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async getProfile(id: string) {
-    const user = await this.userModel
-      .findById(new Types.ObjectId(id))
+  async getById(user_id: string) {
+    return await this.userModel
+      .findById(new Types.ObjectId(user_id))
       .select('-providers')
       .lean();
+  }
+
+  async getByUserName(user_name: string) {
+    return this.userModel.findOne({ user_name }).select('-providers').lean();
+  }
+
+  async updateFollower(user_id: string, type: 'following' | 'follower') {
+    const field = type === 'following' ? 'total_followings' : 'total_followers';
+
+    const user = await this.userModel
+      .findByIdAndUpdate(new Types.ObjectId(user_id), { $inc: { [field]: 1 } })
+      .select('-providers');
 
     if (!user) {
       throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
     }
 
-    return {
-      message: 'Lấy thông tin thành công',
-      user,
-    };
+    return true;
   }
 
   async findLocalByEmail(email: string) {
