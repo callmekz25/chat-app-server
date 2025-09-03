@@ -1,4 +1,3 @@
-import { CreateUserDto } from '@/users/dtos/create-user.dto';
 import { UserService } from '@/users/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { compareHash } from '@/utils/compareHash';
@@ -6,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserDocument } from '@/users/user.schema';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './types/jwt-payload';
+import { CreateUserDto } from '@/users/user.dto';
 
 @Injectable()
 export class AuthService {

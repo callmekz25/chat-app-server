@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
-import { Gender } from '../user.schema';
+import { Gender } from './user.schema';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Email không được trống' })

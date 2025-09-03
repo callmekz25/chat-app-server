@@ -1,16 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
 
 import { NoteService } from './note.service';
-import { JwtAuthGuard } from '@/auth/passports/jwt-auth.guard';
-import { AddNoteDto } from '@/users/dtos/add-note-dto';
+import { AddNoteDto } from './note.dto';
 
 @Controller('notes')
 export class NoteController {

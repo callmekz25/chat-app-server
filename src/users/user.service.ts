@@ -4,10 +4,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { User, UserDocument } from './user.schema';
-import { CreateUserDto } from './dtos/create-user.dto';
+
 import { hashPlainText } from '@/utils/hashPlainText';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CreateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {

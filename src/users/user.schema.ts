@@ -71,6 +71,9 @@ export class User {
   @Prop({ type: Number, default: 0 })
   total_followings: number;
 
+  @Prop({ type: Date, default: null })
+  last_seen: Date;
+
   @Prop({ type: [UserProviderSchema], default: [] })
   providers: UserProvider[];
 }

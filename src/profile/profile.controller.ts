@@ -9,10 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { JwtAuthGuard } from '@/auth/passports/jwt-auth.guard';
-import { AddNoteDto } from '@/users/dtos/add-note-dto';
 import { Public } from '@/auth/decorators/public.decorator';
 import { OptionalJwtAuthGuard } from '@/auth/passports/optional-jwt-auth.guard';
+import { AddNoteDto } from '@/notes/note.dto';
 
 @Controller('profile')
 export class ProfileController {

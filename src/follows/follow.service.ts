@@ -71,9 +71,13 @@ export class FollowService {
 
     const followers = await this.followModel
       .find({
-        following_id: new Types.ObjectId(user._id),
+        following: new Types.ObjectId(user._id),
       })
-      .populate('follower');
+      .select('follower status')
+      .populate({
+        path: 'follower',
+        select: 'user_name avatar_url full_name',
+      });
     return {
       followers,
     };
@@ -87,9 +91,13 @@ export class FollowService {
 
     const followings = await this.followModel
       .find({
-        following_id: new Types.ObjectId(user._id),
+        follower: new Types.ObjectId(user._id),
       })
-      .populate('following');
+      .select('following status')
+      .populate({
+        path: 'following',
+        select: 'user_name avatar_url full_name',
+      });
     return {
       followings,
     };
