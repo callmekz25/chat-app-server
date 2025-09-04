@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export enum Gender {
   MALE = 'male',
@@ -38,6 +38,8 @@ const UserProviderSchema = SchemaFactory.createForClass(UserProvider);
   timestamps: true,
 })
 export class User {
+  _id: Types.ObjectId;
+
   @Prop({ unique: true, required: true })
   email: string;
 

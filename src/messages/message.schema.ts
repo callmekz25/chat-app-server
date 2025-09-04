@@ -2,7 +2,7 @@ import { User } from '@/users/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
-export enum MessageKind {
+export enum MessageType {
   TEXT = 'text',
   IMAGE = 'image',
   VOICE = 'voice',
@@ -41,10 +41,10 @@ export class Message {
 
   @Prop({
     type: [String],
-    enum: Object.values(MessageKind),
-    default: MessageKind.TEXT,
+    enum: Object.values(MessageType),
+    default: MessageType.TEXT,
   })
-  kind: MessageKind;
+  message_type: MessageType;
 
   @Prop()
   text: string;

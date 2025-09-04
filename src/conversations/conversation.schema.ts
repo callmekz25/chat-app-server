@@ -8,9 +8,9 @@ export enum ConversationType {
   GROUP = 'group',
 }
 
-class Participant {
+export class Participant {
   @Prop({ type: Types.ObjectId, ref: User.name })
-  user_id: Types.ObjectId;
+  user: Types.ObjectId | User;
 
   @Prop({ type: String, enum: ['member', 'leader'], default: 'member' })
   role: 'member' | 'leader';
@@ -24,11 +24,13 @@ class Participant {
 
 @Schema({ timestamps: true })
 export class Conversation {
+  _id: Types.ObjectId;
+
   @Prop({
     type: [
       {
-        user_id: { type: Types.ObjectId, ref: User.name },
-        role: { type: String, enum: ['member', 'leader'], default: 'leader' },
+        user: { type: Types.ObjectId, ref: User.name },
+        role: { type: String, enum: ['member', 'leader'], default: 'member' },
         joined_at: { type: Date, default: Date.now },
         last_read_at: { type: Date },
       },
