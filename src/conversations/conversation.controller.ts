@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './conversation.dto';
 
@@ -6,13 +6,24 @@ import { CreateConversationDto } from './conversation.dto';
 export class ConversationController {
   constructor(private readonly converService: ConversationService) {}
 
+  @Post()
+  async getOrCreateConversation(
+    @Req() req,
+    @Body() body: CreateConversationDto,
+  ) {
+    return this.converService.getOrCreateConversation(
+      req.user.sub,
+      body.other_user_id,
+    );
+  }
+
   @Get()
   async getConversations(@Req() req) {
     return this.converService.getConversations(req.user.sub);
   }
 
-  @Post()
-  async createConversation(@Req() req, @Body() body: CreateConversationDto) {
-    await this.converService.createConversation(req.user.sub, body);
+  @Get(':id')
+  async getConversationById(@Req() req, @Param('id') id: string) {
+    return this.converService.getConversationById(req.user.sub, id);
   }
 }

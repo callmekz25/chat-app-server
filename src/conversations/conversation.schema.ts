@@ -47,7 +47,7 @@ export class Conversation {
   type: ConversationType;
 
   @Prop()
-  title?: string;
+  name?: string;
 
   @Prop({
     type: {

@@ -1,12 +1,20 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ConversationType } from './conversation.schema';
+import { Types } from 'mongoose';
 
 export class CreateConversationDto {
   @IsNotEmpty()
-  participants: {
-    user: string;
-  }[];
+  other_user_id: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   type: ConversationType;
+}
+
+export class ConversationResponseDto {
+  _id: Types.ObjectId;
+  type: ConversationType;
+  name?: string;
+  user_name?: string;
+  avatar?: { url?: string; public_id?: string };
+  last_message_at?: Date;
 }
