@@ -12,7 +12,7 @@ import {
 } from './conversation.schema';
 import {
   ConversationResponseDto,
-  CreateConversationDto,
+  UpdateLastMessageDto,
 } from './conversation.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@/users/user.schema';
@@ -131,5 +131,17 @@ export class ConversationService {
     return {
       directs: result,
     };
+  }
+
+  async updateLastMessage(dto: UpdateLastMessageDto) {
+    return await this.converModel.updateOne(
+      {
+        _id: new Types.ObjectId(dto.conversation_id),
+      },
+      {
+        last_message_id: new Types.ObjectId(dto.message_id),
+        last_message_at: new Date(),
+      },
+    );
   }
 }

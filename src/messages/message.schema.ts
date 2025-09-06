@@ -15,11 +15,11 @@ export class Message {
   @Prop({ type: Types.ObjectId, ref: User.name, required: true })
   user_id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: User.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Conversation', required: true })
   conversation_id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: Message.name })
-  reply_message_id: Types.ObjectId;
+  reply_message_id?: Types.ObjectId;
 
   @Prop({
     type: [
@@ -40,14 +40,14 @@ export class Message {
   }[];
 
   @Prop({
-    type: [String],
+    type: String,
     enum: Object.values(MessageType),
     default: MessageType.TEXT,
   })
   message_type: MessageType;
 
   @Prop()
-  text: string;
+  message: string;
 
   @Prop({ type: Boolean, default: false })
   is_deleted: boolean;

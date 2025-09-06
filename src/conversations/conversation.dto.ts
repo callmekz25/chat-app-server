@@ -18,3 +18,11 @@ export class ConversationResponseDto {
   avatar?: { url?: string; public_id?: string };
   last_message_at?: Date;
 }
+
+export class UpdateLastMessageDto {
+  @IsNotEmpty()
+  conversation_id: string;
+
+  @IsNotEmpty()
+  message_id: string;
+}
