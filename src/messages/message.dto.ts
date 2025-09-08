@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateMessageDto {
   @IsNotEmpty()
@@ -9,4 +9,12 @@ export class CreateMessageDto {
 
   @IsNotEmpty()
   message: string;
+}
+
+export class GetMessageDto {
+  @IsOptional()
+  before: string;
+
+  @IsOptional()
+  limit = 20;
 }

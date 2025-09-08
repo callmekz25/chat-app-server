@@ -52,6 +52,23 @@ export class ChatGateway
     console.log(`Client disconnected`);
   }
 
+  @SubscribeMessage('conversation:join')
+  async onJoinConversation(
+    client: Socket,
+    payload: { conversation_id: string },
+  ) {
+    const { conversation_id } = payload;
+    await client.join(conversation_id);
+  }
+  @SubscribeMessage('conversation:leave')
+  async onLeaveConversation(
+    client: Socket,
+    payload: { conversation_id: string },
+  ) {
+    const { conversation_id } = payload;
+    await client.leave(conversation_id);
+  }
+
   @SubscribeMessage('message:send')
   async handleSendMessage(
     client: Socket,
@@ -70,7 +87,7 @@ export class ChatGateway
       conversation_id: payload.conversation_id,
       message_id: message._id.toString(),
     });
-    this.server.emit('message:new', {
+    this.server.to(payload.conversation_id).emit('message:new', {
       conversation_id: payload.conversation_id,
       message: message,
     });
