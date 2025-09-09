@@ -61,7 +61,7 @@ export class Conversation {
   };
 
   @Prop({ type: Types.ObjectId, ref: Message.name })
-  last_message_id?: Types.ObjectId;
+  last_message?: Types.ObjectId | Message;
 
   @Prop({ type: Date })
   last_message_at?: Date;

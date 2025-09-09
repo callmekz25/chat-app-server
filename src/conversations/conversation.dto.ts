@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ConversationType } from './conversation.schema';
 import { Types } from 'mongoose';
+import { Message } from '@/messages/message.schema';
 
 export class CreateConversationDto {
   @IsNotEmpty()
@@ -17,6 +18,7 @@ export class ConversationResponseDto {
   user_name?: string;
   avatar?: { url?: string; public_id?: string };
   last_message_at?: Date;
+  last_message?: Message;
 }
 
 export class UpdateLastMessageDto {
@@ -25,4 +27,12 @@ export class UpdateLastMessageDto {
 
   @IsNotEmpty()
   message_id: string;
+}
+
+export class UpdateSeenMessageDto {
+  @IsNotEmpty()
+  conversation_id: string;
+
+  @IsNotEmpty()
+  user_id: string;
 }

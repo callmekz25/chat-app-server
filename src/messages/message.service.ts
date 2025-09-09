@@ -35,21 +35,18 @@ export class MessageService {
 
     const docs = await this.messageModel
       .find(filter)
-      .sort({ _id: -1 }) // newest → oldest
+      .sort({ _id: -1 })
       .limit(limit)
       .lean();
 
-    // đảo lại cho UI: oldest → newest
     const messages = [...docs].reverse();
 
-    // cursor = id của message cũ nhất trong batch (để load older)
     const nextCursor =
       docs.length === Number(limit) ? messages[0]._id.toString() : null;
 
     return {
       messages,
       nextCursor,
-      hasMore: !!nextCursor,
     };
   }
 }

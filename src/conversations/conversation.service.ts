@@ -13,9 +13,11 @@ import {
 import {
   ConversationResponseDto,
   UpdateLastMessageDto,
+  UpdateSeenMessageDto,
 } from './conversation.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@/users/user.schema';
+import { Message } from '@/messages/message.schema';
 
 @Injectable()
 export class ConversationService {
@@ -61,6 +63,7 @@ export class ConversationService {
       .findById(new Types.ObjectId(conversation_id))
       .sort({ last_message_at: -1, updatedAt: -1 })
       .populate('participants.user', 'full_name _id user_name avatar')
+      .populate('last_message')
       .lean<ConversationDocument>();
     if (!conversation) {
       throw new NotFoundException();
@@ -73,6 +76,7 @@ export class ConversationService {
         name: conversation.name,
         avatar: conversation.avatar,
         last_message_at: conversation.last_message_at,
+        last_message: conversation.last_message as Message,
       };
     } else {
       const other = conversation.participants.find(
@@ -89,6 +93,7 @@ export class ConversationService {
           public_id: (other?.user as User).avatar_public_id,
         },
         last_message_at: conversation.last_message_at,
+        last_message: conversation.last_message as Message,
       };
     }
     return {
@@ -101,9 +106,12 @@ export class ConversationService {
       .find({ 'participants.user': new Types.ObjectId(user_id) })
       .sort({ last_message_at: -1, updatedAt: -1 })
       .populate('participants.user', 'full_name _id user_name avatar')
+      .populate('last_message')
       .lean<ConversationDocument[]>();
 
     const result = conversations.map((c: ConversationDocument) => {
+      console.log(c.last_message);
+
       if (c.type === ConversationType.GROUP) {
         return {
           _id: c._id,
@@ -111,6 +119,7 @@ export class ConversationService {
           name: c.name,
           avatar: c.avatar,
           last_message_at: c.last_message_at,
+          last_message: c.last_message,
         };
       }
 
@@ -126,6 +135,7 @@ export class ConversationService {
           public_id: (other?.user as User).avatar_public_id,
         },
         last_message_at: c.last_message_at,
+        last_message: c.last_message,
       };
     });
     return {
@@ -139,8 +149,22 @@ export class ConversationService {
         _id: new Types.ObjectId(dto.conversation_id),
       },
       {
-        last_message_id: new Types.ObjectId(dto.message_id),
+        last_message: new Types.ObjectId(dto.message_id),
         last_message_at: new Date(),
+      },
+    );
+  }
+
+  async updateSeenMessage(dto: UpdateSeenMessageDto) {
+    return this.converModel.updateOne(
+      {
+        _id: new Types.ObjectId(dto.conversation_id),
+        'participants.user': new Types.ObjectId(dto.user_id),
+      },
+      {
+        $set: {
+          'participants.$.last_read_at': new Date(),
+        },
       },
     );
   }

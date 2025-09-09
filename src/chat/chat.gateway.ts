@@ -58,7 +58,14 @@ export class ChatGateway
     payload: { conversation_id: string },
   ) {
     const { conversation_id } = payload;
+    const user_id = client.data.user_id;
+
     await client.join(conversation_id);
+
+    await this.conversationService.updateSeenMessage({
+      conversation_id,
+      user_id,
+    });
   }
   @SubscribeMessage('conversation:leave')
   async onLeaveConversation(
@@ -66,6 +73,7 @@ export class ChatGateway
     payload: { conversation_id: string },
   ) {
     const { conversation_id } = payload;
+
     await client.leave(conversation_id);
   }
 
