@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message, MessageDocument } from './message.schema';
-import { Model, Types } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { CreateMessageDto, GetMessageDto } from './message.dto';
 import { GetMessagesRes } from './message.type';
+import { ConversationService } from '@/conversations/conversation.service';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectModel(Message.name)
     private readonly messageModel: Model<MessageDocument>,
+    private readonly converService: ConversationService,
   ) {}
 
   async createMessage(dto: CreateMessageDto) {
@@ -21,10 +23,14 @@ export class MessageService {
   }
 
   async getMessagesByConversationId(
+    user_id: string,
     conversation_id: string,
     dto: GetMessageDto,
   ): Promise<GetMessagesRes> {
     const { before, limit } = dto;
+
+    const participants =
+      await this.converService.getParticipants(conversation_id);
 
     const filter: any = {
       conversation_id: new Types.ObjectId(conversation_id),
@@ -41,11 +47,24 @@ export class MessageService {
 
     const messages = [...docs].reverse();
 
+    const messagesWithSeen = messages.map((m) => {
+      const seen_by = participants
+        .filter(
+          (p) =>
+            p.user.toString() !== user_id &&
+            p.last_seen_message?.toString() === m._id.toString() &&
+            m.user_id.toString() === user_id,
+        )
+        .map((p) => p.user);
+
+      return { ...m, seen_by };
+    });
+
     const nextCursor =
       docs.length === Number(limit) ? messages[0]._id.toString() : null;
 
     return {
-      messages,
+      messages: messagesWithSeen,
       nextCursor,
     };
   }

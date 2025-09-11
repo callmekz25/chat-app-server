@@ -26,6 +26,16 @@ export class ConversationService {
     private readonly converModel: Model<ConversationDocument>,
   ) {}
 
+  async getParticipants(conversation_id: string) {
+    const conversation = await this.converModel
+      .findById(new Types.ObjectId(conversation_id))
+      .lean<ConversationDocument>();
+    if (!conversation) {
+      throw new NotFoundException();
+    }
+    return conversation.participants;
+  }
+
   async getOrCreateConversation(user_id: string, other_user_id: string) {
     let conversation = await this.converModel
       .findOne({
@@ -69,6 +79,16 @@ export class ConversationService {
       throw new NotFoundException();
     }
     let direct: ConversationResponseDto | null = null;
+
+    const currentUser = conversation.participants.find(
+      (p) => p.user._id.toString() === user_id,
+    );
+    const lastMessage = conversation.last_message as Message;
+
+    const isSeen =
+      !!lastMessage &&
+      !!currentUser?.last_read_at &&
+      new Date(lastMessage.createdAt) <= new Date(currentUser.last_read_at);
     if (conversation.type === ConversationType.GROUP) {
       direct = {
         _id: conversation._id,
@@ -76,7 +96,12 @@ export class ConversationService {
         name: conversation.name,
         avatar: conversation.avatar,
         last_message_at: conversation.last_message_at,
-        last_message: conversation.last_message as Message,
+        last_message: {
+          is_seen: isSeen,
+          ...conversation.last_message,
+        } as Message & {
+          is_seen: boolean;
+        },
       };
     } else {
       const other = conversation.participants.find(
@@ -93,7 +118,12 @@ export class ConversationService {
           public_id: (other?.user as User).avatar_public_id,
         },
         last_message_at: conversation.last_message_at,
-        last_message: conversation.last_message as Message,
+        last_message: {
+          is_seen: isSeen,
+          ...conversation.last_message,
+        } as Message & {
+          is_seen: boolean;
+        },
       };
     }
     return {
@@ -110,8 +140,15 @@ export class ConversationService {
       .lean<ConversationDocument[]>();
 
     const result = conversations.map((c: ConversationDocument) => {
-      console.log(c.last_message);
+      const currentUser = c.participants.find(
+        (p) => p.user._id.toString() === user_id,
+      );
+      const lastMessage = c.last_message as Message;
 
+      const isSeen =
+        !!lastMessage &&
+        !!currentUser?.last_read_at &&
+        new Date(lastMessage.createdAt) <= new Date(currentUser.last_read_at);
       if (c.type === ConversationType.GROUP) {
         return {
           _id: c._id,
@@ -119,7 +156,12 @@ export class ConversationService {
           name: c.name,
           avatar: c.avatar,
           last_message_at: c.last_message_at,
-          last_message: c.last_message,
+          last_message: {
+            is_seen: isSeen,
+            ...c.last_message,
+          } as Message & {
+            is_seen: boolean;
+          },
         };
       }
 
@@ -135,7 +177,12 @@ export class ConversationService {
           public_id: (other?.user as User).avatar_public_id,
         },
         last_message_at: c.last_message_at,
-        last_message: c.last_message,
+        last_message: {
+          is_seen: isSeen,
+          ...c.last_message,
+        } as Message & {
+          is_seen: boolean;
+        },
       };
     });
     return {
@@ -164,6 +211,9 @@ export class ConversationService {
       {
         $set: {
           'participants.$.last_read_at': new Date(),
+          'participants.$.last_seen_message': new Types.ObjectId(
+            dto.message_id,
+          ),
         },
       },
     );

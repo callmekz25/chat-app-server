@@ -61,11 +61,6 @@ export class ChatGateway
     const user_id = client.data.user_id;
 
     await client.join(conversation_id);
-
-    await this.conversationService.updateSeenMessage({
-      conversation_id,
-      user_id,
-    });
   }
   @SubscribeMessage('conversation:leave')
   async onLeaveConversation(
@@ -82,8 +77,6 @@ export class ChatGateway
     client: Socket,
     payload: { conversation_id: string; message: string },
   ) {
-    console.log('Message:', payload);
-
     const user_id = client.data.user_id;
 
     const message = await this.messageService.createMessage({
@@ -98,6 +91,20 @@ export class ChatGateway
     this.server.to(payload.conversation_id).emit('message:new', {
       conversation_id: payload.conversation_id,
       message: message,
+    });
+  }
+
+  @SubscribeMessage('conversation:seen')
+  async seenMessage(
+    client: Socket,
+    payload: { conversation_id: string; message_id: string },
+  ) {
+    const { conversation_id, message_id } = payload;
+    const user_id = client.data.user_id;
+    await this.conversationService.updateSeenMessage({
+      conversation_id,
+      user_id,
+      message_id,
     });
   }
 }

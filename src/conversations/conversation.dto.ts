@@ -35,4 +35,7 @@ export class UpdateSeenMessageDto {
 
   @IsNotEmpty()
   user_id: string;
+
+  @IsNotEmpty()
+  message_id: string;
 }

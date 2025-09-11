@@ -20,6 +20,9 @@ export class Participant {
 
   @Prop({ type: Date })
   last_read_at?: Date;
+
+  @Prop({ type: Types.ObjectId, ref: Message.name })
+  last_seen_message: Types.ObjectId;
 }
 
 @Schema({ timestamps: true })
@@ -33,6 +36,7 @@ export class Conversation {
         role: { type: String, enum: ['member', 'leader'], default: 'member' },
         joined_at: { type: Date, default: Date.now },
         last_read_at: { type: Date },
+        last_seen_message: { type: Types.ObjectId, ref: Message.name },
       },
     ],
     default: [],

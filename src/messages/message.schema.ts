@@ -54,6 +54,9 @@ export class Message {
 
   @Prop({ type: Boolean, default: false })
   is_edited: boolean;
+
+  @Prop()
+  createdAt: string;
 }
 export type MessageDocument = Document & Message;
 export const MessageSchema = SchemaFactory.createForClass(Message);
