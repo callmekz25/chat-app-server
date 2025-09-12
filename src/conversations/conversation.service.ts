@@ -8,16 +8,9 @@ import {
   Conversation,
   ConversationDocument,
   ConversationType,
-  Participant,
 } from './conversation.schema';
-import {
-  ConversationResponseDto,
-  UpdateLastMessageDto,
-  UpdateSeenMessageDto,
-} from './conversation.dto';
+import { UpdateLastMessageDto, UpdateSeenMessageDto } from './conversation.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '@/users/user.schema';
-import { Message } from '@/messages/message.schema';
 
 @Injectable()
 export class ConversationService {
@@ -78,128 +71,51 @@ export class ConversationService {
     if (!conversation) {
       throw new NotFoundException();
     }
-    let direct: ConversationResponseDto | null = null;
 
-    const currentUser = conversation.participants.find(
-      (p) => p.user._id.toString() === user_id,
-    );
-    const lastMessage = conversation.last_message as Message;
-
-    const isSeen =
-      !!lastMessage &&
-      !!currentUser?.last_read_at &&
-      new Date(lastMessage.createdAt) <= new Date(currentUser.last_read_at);
-    if (conversation.type === ConversationType.GROUP) {
-      direct = {
-        _id: conversation._id,
-        type: conversation.type,
-        name: conversation.name,
-        avatar: conversation.avatar,
-        last_message_at: conversation.last_message_at,
-        last_message: {
-          is_seen: isSeen,
-          ...conversation.last_message,
-        } as Message & {
-          is_seen: boolean;
-        },
-      };
-    } else {
-      const other = conversation.participants.find(
-        (p: Participant) => p.user._id.toString() !== user_id,
-      );
-
-      direct = {
-        _id: conversation._id,
-        type: conversation.type,
-        name: (other?.user as User).full_name,
-        user_name: (other?.user as User).user_name,
-        avatar: {
-          url: (other?.user as User).avatar_url,
-          public_id: (other?.user as User).avatar_public_id,
-        },
-        last_message_at: conversation.last_message_at,
-        last_message: {
-          is_seen: isSeen,
-          ...conversation.last_message,
-        } as Message & {
-          is_seen: boolean;
-        },
-      };
-    }
     return {
-      direct: direct,
+      direct: conversation,
     };
   }
 
   async getConversations(user_id: string) {
     const conversations = await this.converModel
-      .find({ 'participants.user': new Types.ObjectId(user_id) })
+      .find({
+        'participants.user': new Types.ObjectId(user_id),
+        last_message: { $ne: null, $exists: true },
+      })
       .sort({ last_message_at: -1, updatedAt: -1 })
-      .populate('participants.user', 'full_name _id user_name avatar')
+      .populate(
+        'participants.user',
+        'full_name _id user_name avatar_url avatar_public_id',
+      )
       .populate('last_message')
       .lean<ConversationDocument[]>();
 
-    const result = conversations.map((c: ConversationDocument) => {
-      const currentUser = c.participants.find(
-        (p) => p.user._id.toString() === user_id,
-      );
-      const lastMessage = c.last_message as Message;
-
-      const isSeen =
-        !!lastMessage &&
-        !!currentUser?.last_read_at &&
-        new Date(lastMessage.createdAt) <= new Date(currentUser.last_read_at);
-      if (c.type === ConversationType.GROUP) {
-        return {
-          _id: c._id,
-          type: c.type,
-          name: c.name,
-          avatar: c.avatar,
-          last_message_at: c.last_message_at,
-          last_message: {
-            is_seen: isSeen,
-            ...c.last_message,
-          } as Message & {
-            is_seen: boolean;
-          },
-        };
-      }
-
-      const other = c.participants.find(
-        (p: Participant) => p.user._id.toString() !== user_id,
-      );
-      return {
-        _id: c._id,
-        type: c.type,
-        name: (other?.user as User).full_name,
-        avatar: {
-          url: (other?.user as User).avatar_url,
-          public_id: (other?.user as User).avatar_public_id,
-        },
-        last_message_at: c.last_message_at,
-        last_message: {
-          is_seen: isSeen,
-          ...c.last_message,
-        } as Message & {
-          is_seen: boolean;
-        },
-      };
-    });
     return {
-      directs: result,
+      directs: conversations,
     };
   }
 
-  async updateLastMessage(dto: UpdateLastMessageDto) {
-    return await this.converModel.updateOne(
-      {
-        _id: new Types.ObjectId(dto.conversation_id),
-      },
-      {
-        last_message: new Types.ObjectId(dto.message_id),
-        last_message_at: new Date(),
-      },
-    );
+  async updateLastMessage(dto: UpdateLastMessageDto, user_id: string) {
+    const conversation = await this.converModel
+      .findOneAndUpdate(
+        { _id: new Types.ObjectId(dto.conversation_id) },
+        {
+          last_message: new Types.ObjectId(dto.message_id),
+          last_message_at: new Date(),
+        },
+        { new: true },
+      )
+      .populate(
+        'participants.user',
+        'full_name _id user_name avatar_url avatar_public_id',
+      )
+      .populate('last_message')
+      .lean<ConversationDocument>();
+    if (!conversation) {
+      throw new NotFoundException();
+    }
+    return conversation;
   }
 
   async updateSeenMessage(dto: UpdateSeenMessageDto) {

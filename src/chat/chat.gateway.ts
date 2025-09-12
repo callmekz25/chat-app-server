@@ -43,6 +43,10 @@ export class ChatGateway
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       client.data.user_id = payload.sub;
+      const { directs } = await this.conversationService.getConversations(
+        client.data.user_id,
+      );
+      directs.forEach((c) => client.join(c._id.toString()));
     } catch {
       client.disconnect();
     }
@@ -51,25 +55,45 @@ export class ChatGateway
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected`);
   }
-
   @SubscribeMessage('conversation:join')
-  async onJoinConversation(
-    client: Socket,
-    payload: { conversation_id: string },
-  ) {
-    const { conversation_id } = payload;
-    const user_id = client.data.user_id;
-
-    await client.join(conversation_id);
+  handleJoinConversation(client: Socket, payload: { conversation_id: string }) {
+    client.join(payload.conversation_id);
   }
+
   @SubscribeMessage('conversation:leave')
-  async onLeaveConversation(
+  handleLeaveConversation(
     client: Socket,
     payload: { conversation_id: string },
   ) {
-    const { conversation_id } = payload;
+    client.leave(payload.conversation_id);
+  }
 
-    await client.leave(conversation_id);
+  @SubscribeMessage('conversation:typing')
+  handleTyping(
+    client: Socket,
+    payload: { conversation_id: string; user_id: string },
+  ) {
+    this.server
+      .to(payload.conversation_id)
+      .except(client.id)
+      .emit('conversation:typing', {
+        conversation_id: payload.conversation_id,
+        user_id: payload.user_id,
+      });
+  }
+
+  @SubscribeMessage('conversation:stop_typing')
+  handleStopTyping(
+    client: Socket,
+    payload: { conversation_id: string; user_id: string },
+  ) {
+    this.server
+      .to(payload.conversation_id)
+      .except(client.id)
+      .emit('conversation:stop_typing', {
+        conversation_id: payload.conversation_id,
+        user_id: payload.user_id,
+      });
   }
 
   @SubscribeMessage('message:send')
@@ -84,14 +108,21 @@ export class ChatGateway
       message: payload.message,
       conversation_id: payload.conversation_id,
     });
-    await this.conversationService.updateLastMessage({
-      conversation_id: payload.conversation_id,
-      message_id: message._id.toString(),
-    });
+    const conversation = await this.conversationService.updateLastMessage(
+      {
+        conversation_id: payload.conversation_id,
+        message_id: message._id.toString(),
+      },
+      user_id,
+    );
     this.server.to(payload.conversation_id).emit('message:new', {
       conversation_id: payload.conversation_id,
       message: message,
     });
+
+    this.server
+      .to(payload.conversation_id)
+      .emit('conversation:updated', conversation);
   }
 
   @SubscribeMessage('conversation:seen')

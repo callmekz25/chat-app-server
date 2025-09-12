@@ -21,7 +21,7 @@ import { JwtAuthGuard } from './passports/jwt-auth.guard';
         global: true,
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: '15m',
+          expiresIn: '60m',
         },
       }),
     }),
