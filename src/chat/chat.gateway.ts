@@ -55,18 +55,6 @@ export class ChatGateway
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected`);
   }
-  @SubscribeMessage('conversation:join')
-  handleJoinConversation(client: Socket, payload: { conversation_id: string }) {
-    client.join(payload.conversation_id);
-  }
-
-  @SubscribeMessage('conversation:leave')
-  handleLeaveConversation(
-    client: Socket,
-    payload: { conversation_id: string },
-  ) {
-    client.leave(payload.conversation_id);
-  }
 
   @SubscribeMessage('conversation:typing')
   handleTyping(
@@ -76,10 +64,8 @@ export class ChatGateway
     this.server
       .to(payload.conversation_id)
       .except(client.id)
-      .emit('conversation:typing', {
-        conversation_id: payload.conversation_id,
-        user_id: payload.user_id,
-      });
+      .emit('conversation:typing', payload);
+    console.log(payload.conversation_id);
   }
 
   @SubscribeMessage('conversation:stop_typing')
@@ -108,13 +94,10 @@ export class ChatGateway
       message: payload.message,
       conversation_id: payload.conversation_id,
     });
-    const conversation = await this.conversationService.updateLastMessage(
-      {
-        conversation_id: payload.conversation_id,
-        message_id: message._id.toString(),
-      },
-      user_id,
-    );
+    const conversation = await this.conversationService.updateLastMessage({
+      conversation_id: payload.conversation_id,
+      message_id: message._id.toString(),
+    });
     this.server.to(payload.conversation_id).emit('message:new', {
       conversation_id: payload.conversation_id,
       message: message,
@@ -126,7 +109,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('conversation:seen')
-  async seenMessage(
+  async handleSeenMessage(
     client: Socket,
     payload: { conversation_id: string; message_id: string },
   ) {
@@ -136,6 +119,11 @@ export class ChatGateway
       conversation_id,
       user_id,
       message_id,
+    });
+    this.server.to(payload.conversation_id).emit('conversation:seen:updated', {
+      conversation_id: payload.conversation_id,
+      user_id: user_id,
+      message_id: payload.message_id,
     });
   }
 }

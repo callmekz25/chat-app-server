@@ -96,7 +96,7 @@ export class ConversationService {
     };
   }
 
-  async updateLastMessage(dto: UpdateLastMessageDto, user_id: string) {
+  async updateLastMessage(dto: UpdateLastMessageDto) {
     const conversation = await this.converModel
       .findOneAndUpdate(
         { _id: new Types.ObjectId(dto.conversation_id) },
