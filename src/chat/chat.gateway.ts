@@ -108,7 +108,7 @@ export class ChatGateway
       .emit('conversation:updated', conversation);
   }
 
-  @SubscribeMessage('conversation:seen')
+  @SubscribeMessage('message:seen')
   async handleSeenMessage(
     client: Socket,
     payload: { conversation_id: string; message_id: string },
@@ -120,7 +120,7 @@ export class ChatGateway
       user_id,
       message_id,
     });
-    this.server.to(payload.conversation_id).emit('conversation:seen:updated', {
+    this.server.to(payload.conversation_id).emit('message:seen:updated', {
       conversation_id: payload.conversation_id,
       user_id: user_id,
       message_id: payload.message_id,

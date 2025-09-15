@@ -13,13 +13,17 @@ export class MessageService {
     private readonly messageModel: Model<MessageDocument>,
     private readonly converService: ConversationService,
   ) {}
-
   async createMessage(dto: CreateMessageDto) {
-    return await this.messageModel.create({
+    const message = await this.messageModel.create({
       conversation_id: new Types.ObjectId(dto.conversation_id),
       user_id: new Types.ObjectId(dto.user_id),
       message: dto.message,
     });
+
+    return {
+      ...message.toObject(),
+      seen_by: [],
+    };
   }
 
   async getMessagesByConversationId(
@@ -51,9 +55,10 @@ export class MessageService {
       const seen_by = participants
         .filter(
           (p) =>
-            p.user.toString() !== user_id &&
-            p.last_seen_message?.toString() === m._id.toString() &&
-            m.user_id.toString() === user_id,
+            (p.user as Types.ObjectId).toString() !== m.user_id.toString() &&
+            p.last_seen_message &&
+            new Types.ObjectId(p.last_seen_message) >=
+              new Types.ObjectId(m._id),
         )
         .map((p) => p.user);
 

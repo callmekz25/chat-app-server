@@ -58,7 +58,7 @@ export class ConversationService {
     };
   }
 
-  async getConversationById(user_id: string, conversation_id: string) {
+  async getConversationById(conversation_id: string) {
     if (!conversation_id) {
       throw new BadRequestException();
     }
@@ -126,7 +126,6 @@ export class ConversationService {
       },
       {
         $set: {
-          'participants.$.last_read_at': new Date(),
           'participants.$.last_seen_message': new Types.ObjectId(
             dto.message_id,
           ),

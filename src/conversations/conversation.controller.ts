@@ -24,6 +24,6 @@ export class ConversationController {
 
   @Get(':id')
   async getConversationById(@Req() req, @Param('id') id: string) {
-    return this.converService.getConversationById(req.user.sub, id);
+    return this.converService.getConversationById(id);
   }
 }

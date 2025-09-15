@@ -18,9 +18,6 @@ export class Participant {
   @Prop({ type: Date, default: Date.now })
   joined_at: Date;
 
-  @Prop({ type: Date })
-  last_read_at?: Date;
-
   @Prop({ type: Types.ObjectId, ref: Message.name })
   last_seen_message: Types.ObjectId;
 }
@@ -35,7 +32,6 @@ export class Conversation {
         user: { type: Types.ObjectId, ref: User.name },
         role: { type: String, enum: ['member', 'leader'], default: 'member' },
         joined_at: { type: Date, default: Date.now },
-        last_read_at: { type: Date },
         last_seen_message: { type: Types.ObjectId, ref: Message.name },
       },
     ],
