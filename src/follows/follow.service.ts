@@ -1,20 +1,19 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Follow, FollowDocument, Status } from './follow.schema';
-import { Model, Types } from 'mongoose';
 import { UserService } from '@/users/user.service';
+import { FollowRelation } from './domain/follow-relations';
+import { FollowRepository } from './follow.repository';
 
 @Injectable()
 export class FollowService {
   constructor(
-    @InjectModel(Follow.name)
-    private readonly followModel: Model<FollowDocument>,
+    private readonly repository: FollowRepository,
     private readonly userService: UserService,
   ) {}
 
@@ -35,32 +34,18 @@ export class FollowService {
     if (!viewer || !target) {
       return null;
     }
+    const [relationVT, relationTV] = await this.repository.findBothRelations(
+      viewer._id,
+      target._id,
+    );
 
-    const [edgeVT, edgeTV] = await Promise.all([
-      this.followModel
-        .findOne(
-          {
-            follower: viewer?._id,
-            following: target?._id,
-            deletedAt: null,
-          },
-          { status: 1 },
-        )
-        .lean(),
-      this.followModel
-        .findOne(
-          { follower: target?._id, following: viewer?._id },
-          { status: 1 },
-        )
-        .lean(),
-    ]);
-
-    const isFollowing = edgeVT?.status === Status.ACCEPTED;
-    const isRequested = edgeVT?.status === Status.REQUESTED;
-    const isFollowedBy = edgeTV?.status === Status.ACCEPTED;
-    const isMutual = isFollowing && isFollowedBy;
-
-    return { isMe: false, isFollowing, isRequested, isFollowedBy, isMutual };
+    return {
+      isMe: false,
+      isFollowing: relationVT?.isAccepted ?? false,
+      isRequested: relationVT?.isRequested ?? false,
+      isFollowedBy: relationTV?.isAccepted ?? false,
+      isMutual: FollowRelation.isMutual(relationVT, relationTV),
+    };
   }
 
   async getFollowers(user_name: string) {
@@ -69,15 +54,7 @@ export class FollowService {
       throw new UnauthorizedException('Chưa đăng nhập');
     }
 
-    const followers = await this.followModel
-      .find({
-        following: new Types.ObjectId(user._id),
-      })
-      .select('follower status')
-      .populate({
-        path: 'follower',
-        select: 'user_name avatar_url full_name',
-      });
+    const followers = await this.repository.getFollowers(user._id);
     return {
       followers,
     };
@@ -89,53 +66,66 @@ export class FollowService {
       throw new UnauthorizedException('Chưa đăng nhập');
     }
 
-    const followings = await this.followModel
-      .find({
-        follower: new Types.ObjectId(user._id),
-      })
-      .select('following status')
-      .populate({
-        path: 'following',
-        select: 'user_name avatar_url full_name',
-      });
+    const followings = await this.repository.getFollowings(user._id);
     return {
       followings,
     };
   }
 
-  async followUser(follower_user_name: string, following_user_name: string) {
+  async unfollowUser(follower_user_name: string, following_user_name: string) {
     if (!follower_user_name) {
       throw new UnauthorizedException();
     }
     if (!following_user_name) {
       throw new BadRequestException();
     }
+
     if (follower_user_name === following_user_name) {
       throw new ConflictException();
     }
     const user = await this.userService.getByUserName(follower_user_name);
     const otherUser = await this.userService.getByUserName(following_user_name);
+    if (!user || !otherUser) {
+      throw new NotFoundException();
+    }
+
+    await this.repository.unfollowUser(user._id, otherUser._id);
+    await Promise.all([
+      this.userService.updateFollower(user._id.toString(), 'following', -1),
+      this.userService.updateFollower(otherUser._id.toString(), 'follower', -1),
+    ]);
+    return true;
+  }
+
+  async followUser(follower_name: string, following_name: string) {
+    if (!follower_name) {
+      throw new UnauthorizedException();
+    }
+    if (!follower_name) {
+      throw new BadRequestException();
+    }
+    if (follower_name === following_name) {
+      throw new ConflictException();
+    }
+    const [user, otherUser] = await Promise.all([
+      this.userService.getByUserName(follower_name),
+      this.userService.getByUserName(following_name),
+    ]);
 
     if (!user || !otherUser) {
       throw new NotFoundException();
     }
 
-    if (user?.isPrivate) {
-      await this.followModel.create({
-        follower: new Types.ObjectId(user._id),
-        following: new Types.ObjectId(otherUser._id),
-        status: Status.REQUESTED,
-      });
-    } else {
-      await this.followModel.create({
-        follower: new Types.ObjectId(user._id),
-        following: new Types.ObjectId(otherUser._id),
-      });
-      await this.userService.updateFollower(user._id.toString(), 'following');
-      await this.userService.updateFollower(
-        otherUser._id.toString(),
-        'follower',
-      );
+    const relation = await this.repository.followUser(user._id, otherUser._id);
+    if (relation && relation.isAccepted) {
+      await Promise.all([
+        this.userService.updateFollower(user._id.toString(), 'following', 1),
+        this.userService.updateFollower(
+          otherUser._id.toString(),
+          'follower',
+          1,
+        ),
+      ]);
     }
     return true;
   }

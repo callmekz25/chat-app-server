@@ -19,4 +19,9 @@ export class FollowController {
   async followingUser(@Req() req, @Param('user_name') user_name: string) {
     return this.followService.followUser(req.user.user_name, user_name);
   }
+
+  @Post(':user_name/unfollow')
+  async unfollowingUser(@Req() req, @Param('user_name') user_name: string) {
+    return this.followService.unfollowUser(req.user.user_name, user_name);
+  }
 }

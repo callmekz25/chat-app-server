@@ -4,7 +4,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { User, UserDocument } from './user.schema';
-
 import { hashPlainText } from '@/utils/hashPlainText';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -28,11 +27,17 @@ export class UserService {
     return this.userModel.findOne({ user_name }).select('-providers').lean();
   }
 
-  async updateFollower(user_id: string, type: 'following' | 'follower') {
+  async updateFollower(
+    user_id: string,
+    type: 'following' | 'follower',
+    delta: number,
+  ) {
     const field = type === 'following' ? 'total_followings' : 'total_followers';
 
     const user = await this.userModel
-      .findByIdAndUpdate(new Types.ObjectId(user_id), { $inc: { [field]: 1 } })
+      .findByIdAndUpdate(new Types.ObjectId(user_id), {
+        $inc: { [field]: delta },
+      })
       .select('-providers');
 
     if (!user) {
