@@ -2,7 +2,7 @@ import { UserService } from '@/users/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { compareHash } from '@/utils/compareHash';
 import { JwtService } from '@nestjs/jwt';
-import { UserDocument } from '@/users/user.schema';
+import { User, UserDocument } from '@/users/user.schema';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './types/jwt-payload';
 import { CreateUserDto } from '@/users/user.dto';
@@ -29,7 +29,7 @@ export class AuthService {
     if (!refresh_token) {
       throw new UnauthorizedException('Không có refresh token');
     }
-    let user: UserDocument | null = null;
+    let user: User | null = null;
     try {
       const payload: JwtPayload = await this.jwtService.verifyAsync(
         refresh_token,

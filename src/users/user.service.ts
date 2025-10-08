@@ -55,9 +55,16 @@ export class UserService {
       })
       .lean();
   }
-  async findOne(object: Record<string, any>) {
-    return await this.userModel.findOne(object).populate('providers').lean();
+  
+  async findOne(object: Record<string, any>): Promise<User | null> {
+    const result = await this.userModel
+      .findOne(object)
+      .populate('providers')
+      .lean()
+      .exec();
+    return result as User | null;
   }
+  
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find().populate('providers');
