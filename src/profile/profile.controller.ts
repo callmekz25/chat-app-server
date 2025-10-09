@@ -34,11 +34,8 @@ export class ProfileController {
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
-  @Get(':user_name')
-  async getProfile(@Req() req, @Param('user_name') user_name: string) {
-    return await this.profileService.getProfile(
-      req?.user?.user_name,
-      user_name,
-    );
+  @Get(':userName')
+  async getProfile(@Req() req, @Param('userName') userName: string) {
+    return await this.profileService.getProfile(req?.user?.userName, userName);
   }
 }

@@ -14,38 +14,37 @@ export class ProfileService {
     private readonly noteService: NoteService,
     private readonly followService: FollowService,
   ) {}
-  async getNote(user_id: string) {
-    return await this.noteService.getByUserId(user_id);
+  async getNote(userId: string) {
+    return await this.noteService.getByUserId(userId);
   }
 
-  async deleteNote(user_id: string) {
-    return await this.noteService.deleteNote(user_id);
+  async deleteNote(userId: string) {
+    return await this.noteService.deleteNote(userId);
   }
 
-  async addNote(user_id: string, content: string) {
-    return await this.noteService.addNote(user_id, content);
+  async addNote(userId: string, content: string) {
+    return await this.noteService.addNote(userId, content);
   }
 
-  async getMe(user_id: string) {
-    if (!user_id) {
+  async getMe(userId: string) {
+    if (!userId) {
       throw new UnauthorizedException('Chưa đăng nhập');
     }
-    const user = await this.userService.getById(user_id);
+    const user = await this.userService.getById(userId);
 
     return {
       user,
     };
   }
 
-  async getProfile(viewer_name: string, target_name: string) {
-    const user = await this.userService.getByUserName(target_name);
-    let relations: any = null;
+  async getProfile(viewerName: string, targetName: string) {
+    console.log(targetName);
 
-    if (viewer_name) {
-      relations = await this.followService.getRelations(
-        viewer_name,
-        target_name,
-      );
+    const user = await this.userService.getByUserName(targetName);
+    let relations;
+
+    if (viewerName) {
+      relations = await this.followService.getRelations(viewerName, targetName);
     }
 
     if (!user) {

@@ -26,7 +26,7 @@ class UserProvider {
   provider: Providers;
 
   @Prop()
-  provider_id: string;
+  providerId: string;
 
   @Prop()
   password?: string;
@@ -44,10 +44,10 @@ export class User {
   email: string;
 
   @Prop({ unique: true, required: true })
-  user_name: string;
+  userName: string;
 
   @Prop({ required: true })
-  full_name: string;
+  fullName: string;
 
   @Prop({ type: [String], enum: Object.values(Role), default: [Role.USER] })
   roles: Role[];
@@ -55,11 +55,16 @@ export class User {
   @Prop({ type: Boolean, default: false })
   isPrivate: boolean;
 
-  @Prop()
-  avatar_url?: string;
-
-  @Prop()
-  avatar_public_id?: string;
+  @Prop({
+    type: {
+      avatarUrl: String,
+      avatarPublicId: String,
+    },
+  })
+  avatar?: {
+    avatarUrl: string;
+    avatarPublicId: string;
+  };
 
   @Prop()
   bio?: string;
@@ -68,13 +73,13 @@ export class User {
   gender: Gender;
 
   @Prop({ type: Number, default: 0 })
-  total_followers: number;
+  totalFollowers: number;
 
   @Prop({ type: Number, default: 0 })
-  total_followings: number;
+  totalFollowings: number;
 
   @Prop({ type: Date, default: null })
-  last_seen: Date;
+  lastOnline: Date;
 
   @Prop({ type: [UserProviderSchema], default: [] })
   providers: UserProvider[];

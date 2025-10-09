@@ -1,23 +1,24 @@
 import { Model, Types } from 'mongoose';
 
 import { InjectModel } from '@nestjs/mongoose';
-import { Follow, FollowDocument } from './follow.schema';
+import { Follow, FollowDocument, Status } from './follow.schema';
 import { FollowRelation } from './domain/follow-relations';
 
 export class FollowRepository {
   constructor(@InjectModel(Follow.name) private model: Model<FollowDocument>) {}
 
   async createRelation(relation: FollowRelation) {
-    return await this.model.create(relation);
+    return await this.model.create({
+      follower: relation.follower,
+      following: relation.following,
+      status: relation.status,
+    });
   }
 
-  async findBothRelations(
-    viewer_id: Types.ObjectId,
-    target_id: Types.ObjectId,
-  ) {
+  async findBothRelations(viewerIdd: Types.ObjectId, targetId: Types.ObjectId) {
     const [relationVT, relationTV] = await Promise.all([
-      this.findRelation(viewer_id, target_id),
-      this.findRelation(target_id, viewer_id),
+      this.findRelation(viewerIdd, targetId),
+      this.findRelation(targetId, viewerIdd),
     ]);
     return [relationVT, relationTV];
   }
@@ -32,48 +33,54 @@ export class FollowRepository {
   }
 
   async followUser(
-    follower_user_id: Types.ObjectId,
-    following_user_id: Types.ObjectId,
+    followerUserId: Types.ObjectId,
+    followingUserId: Types.ObjectId,
   ) {
-    const relation = await this.findRelation(
-      follower_user_id,
-      following_user_id,
-    );
-    await this.model.create(relation);
+    const relation = await this.findRelation(followerUserId, followingUserId);
+
+    if (!relation) {
+      const newRelation = new FollowRelation(
+        followerUserId,
+        followingUserId,
+        Status.ACCEPTED,
+      );
+      return await this.createRelation(newRelation);
+    }
+
     return relation;
   }
 
   async unfollowUser(
-    follower_user_id: Types.ObjectId,
-    following_user_id: Types.ObjectId,
+    followerUserId: Types.ObjectId,
+    followingUserId: Types.ObjectId,
   ) {
     await this.model.deleteOne({
-      follower: new Types.ObjectId(follower_user_id),
-      following: new Types.ObjectId(following_user_id),
+      follower: new Types.ObjectId(followerUserId),
+      following: new Types.ObjectId(followingUserId),
     });
   }
 
-  async getFollowers(user_id: Types.ObjectId) {
+  async getFollowers(userId: Types.ObjectId) {
     return await this.model
       .find({
-        following: new Types.ObjectId(user_id),
+        following: new Types.ObjectId(userId),
       })
       .select('follower status')
       .populate({
         path: 'follower',
-        select: 'user_name avatar_url full_name',
+        select: 'userName avatar fullName',
       });
   }
 
-  async getFollowings(user_id: Types.ObjectId) {
+  async getFollowings(userId: Types.ObjectId) {
     return await this.model
       .find({
-        follower: new Types.ObjectId(user_id),
+        follower: new Types.ObjectId(userId),
       })
       .select('following status')
       .populate({
         path: 'following',
-        select: 'user_name avatar_url full_name',
+        select: 'userName avatar fullName',
       });
   }
 }

@@ -2,13 +2,16 @@ import { IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateMessageDto {
   @IsNotEmpty()
-  user_id: string;
+  userId: string;
 
   @IsNotEmpty()
-  conversation_id: string;
+  conversationId: string;
 
   @IsNotEmpty()
   message: string;
+
+  @IsOptional()
+  replyMessageId: string;
 }
 
 export class GetMessageDto {

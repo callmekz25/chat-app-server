@@ -1,3 +1,4 @@
+import { Conversation } from '@/conversations/conversation.schema';
 import { User } from '@/users/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
@@ -13,18 +14,18 @@ export enum MessageType {
 @Schema({ timestamps: true })
 export class Message {
   @Prop({ type: Types.ObjectId, ref: User.name, required: true })
-  user_id: Types.ObjectId;
+  sendBy: Types.ObjectId | User;
 
   @Prop({ type: Types.ObjectId, ref: 'Conversation', required: true })
-  conversation_id: Types.ObjectId;
+  conversation: Types.ObjectId | Conversation;
 
   @Prop({ type: Types.ObjectId, ref: Message.name })
-  reply_message_id?: Types.ObjectId;
+  replyMessage?: Types.ObjectId | Message;
 
   @Prop({
     type: [
       {
-        user_id: {
+        reactBy: {
           type: Types.ObjectId,
           ref: User.name,
           required: true,
@@ -35,7 +36,7 @@ export class Message {
     default: [],
   })
   reactions: {
-    user_id: Types.ObjectId;
+    reactBy: Types.ObjectId | User;
     emoji: string;
   }[];
 
@@ -44,16 +45,16 @@ export class Message {
     enum: Object.values(MessageType),
     default: MessageType.TEXT,
   })
-  message_type: MessageType;
+  messageType: MessageType;
 
   @Prop()
   message: string;
 
   @Prop({ type: Boolean, default: false })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Prop({ type: Boolean, default: false })
-  is_edited: boolean;
+  isEdited: boolean;
 
   @Prop()
   createdAt: string;

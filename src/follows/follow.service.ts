@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -17,8 +16,8 @@ export class FollowService {
     private readonly userService: UserService,
   ) {}
 
-  async getRelations(viewer_name: string, target_name: string) {
-    if (viewer_name === target_name) {
+  async getRelations(viewerName: string, targetName: string) {
+    if (viewerName === targetName) {
       return {
         isMe: true,
         isFollowing: false,
@@ -28,8 +27,8 @@ export class FollowService {
       };
     }
     const [viewer, target] = await Promise.all([
-      this.userService.getByUserName(viewer_name),
-      this.userService.getByUserName(target_name),
+      this.userService.getByUserName(viewerName),
+      this.userService.getByUserName(targetName),
     ]);
     if (!viewer || !target) {
       return null;
@@ -48,8 +47,8 @@ export class FollowService {
     };
   }
 
-  async getFollowers(user_name: string) {
-    const user = await this.userService.getByUserName(user_name);
+  async getFollowers(userName: string) {
+    const user = await this.userService.getByUserName(userName);
     if (!user) {
       throw new UnauthorizedException('Chưa đăng nhập');
     }
@@ -60,8 +59,8 @@ export class FollowService {
     };
   }
 
-  async getFollowings(user_name: string) {
-    const user = await this.userService.getByUserName(user_name);
+  async getFollowings(userName: string) {
+    const user = await this.userService.getByUserName(userName);
     if (!user) {
       throw new UnauthorizedException('Chưa đăng nhập');
     }
@@ -72,19 +71,19 @@ export class FollowService {
     };
   }
 
-  async unfollowUser(follower_user_name: string, following_user_name: string) {
-    if (!follower_user_name) {
+  async unfollowUser(followerUserName: string, followingUserName: string) {
+    if (!followerUserName) {
       throw new UnauthorizedException();
     }
-    if (!following_user_name) {
+    if (!followingUserName) {
       throw new BadRequestException();
     }
 
-    if (follower_user_name === following_user_name) {
+    if (followerUserName === followingUserName) {
       throw new ConflictException();
     }
-    const user = await this.userService.getByUserName(follower_user_name);
-    const otherUser = await this.userService.getByUserName(following_user_name);
+    const user = await this.userService.getByUserName(followerUserName);
+    const otherUser = await this.userService.getByUserName(followingUserName);
     if (!user || !otherUser) {
       throw new NotFoundException();
     }
@@ -97,19 +96,19 @@ export class FollowService {
     return true;
   }
 
-  async followUser(follower_name: string, following_name: string) {
-    if (!follower_name) {
+  async followUser(followerUserName: string, followingUserName: string) {
+    if (!followerUserName) {
       throw new UnauthorizedException();
     }
-    if (!follower_name) {
+    if (!followingUserName) {
       throw new BadRequestException();
     }
-    if (follower_name === following_name) {
+    if (followerUserName === followingUserName) {
       throw new ConflictException();
     }
     const [user, otherUser] = await Promise.all([
-      this.userService.getByUserName(follower_name),
-      this.userService.getByUserName(following_name),
+      this.userService.getByUserName(followerUserName),
+      this.userService.getByUserName(followingUserName),
     ]);
 
     if (!user || !otherUser) {
@@ -117,7 +116,8 @@ export class FollowService {
     }
 
     const relation = await this.repository.followUser(user._id, otherUser._id);
-    if (relation && relation.isAccepted) {
+
+    if (relation && (relation as FollowRelation).isAccepted) {
       await Promise.all([
         this.userService.updateFollower(user._id.toString(), 'following', 1),
         this.userService.updateFollower(

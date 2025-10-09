@@ -16,32 +16,32 @@ export class UserService {
     private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async getById(user_id: string) {
+  async getById(userId: string) {
     return await this.userModel
-      .findById(new Types.ObjectId(user_id))
+      .findById(new Types.ObjectId(userId))
       .select('-providers')
       .lean();
   }
 
-  async getByUserName(user_name: string) {
-    return this.userModel.findOne({ user_name }).select('-providers').lean();
+  async getByUserName(userName: string) {
+    return this.userModel.findOne({ userName }).select('-providers').lean();
   }
 
   async updateFollower(
-    user_id: string,
+    userId: string,
     type: 'following' | 'follower',
     delta: number,
   ) {
-    const field = type === 'following' ? 'total_followings' : 'total_followers';
+    const field = type === 'following' ? 'totalFollowings' : 'totalFollowers';
 
     const user = await this.userModel
-      .findByIdAndUpdate(new Types.ObjectId(user_id), {
+      .findByIdAndUpdate(new Types.ObjectId(userId), {
         $inc: { [field]: delta },
       })
       .select('-providers');
 
     if (!user) {
-      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
+      throw new UnauthorizedException();
     }
 
     return true;
@@ -55,7 +55,7 @@ export class UserService {
       })
       .lean();
   }
-  
+
   async findOne(object: Record<string, any>): Promise<User | null> {
     const result = await this.userModel
       .findOne(object)
@@ -64,7 +64,6 @@ export class UserService {
       .exec();
     return result as User | null;
   }
-  
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find().populate('providers');
@@ -82,13 +81,10 @@ export class UserService {
     if (isEmailExist) {
       throw new ConflictException('Email đã tồn tại');
     }
-    const { email, full_name, user_name, gender, password } = dto;
-    const passwordHashed = await hashPlainText(password);
+
+    const passwordHashed = await hashPlainText(dto.password);
     const user = this.userModel.create({
-      email,
-      full_name,
-      user_name,
-      gender,
+      ...dto,
       providers: [
         {
           password: passwordHashed,

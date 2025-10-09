@@ -16,10 +16,10 @@ export class Participant {
   role: 'member' | 'leader';
 
   @Prop({ type: Date, default: Date.now })
-  joined_at: Date;
+  joinedAt: Date;
 
   @Prop({ type: Types.ObjectId, ref: Message.name })
-  last_seen_message: Types.ObjectId;
+  lastSeenMessage: Types.ObjectId;
 }
 
 @Schema({ timestamps: true })
@@ -31,8 +31,8 @@ export class Conversation {
       {
         user: { type: Types.ObjectId, ref: User.name },
         role: { type: String, enum: ['member', 'leader'], default: 'member' },
-        joined_at: { type: Date, default: Date.now },
-        last_seen_message: { type: Types.ObjectId, ref: Message.name },
+        joinedAt: { type: Date, default: Date.now },
+        lastSeenMessage: { type: Types.ObjectId, ref: Message.name },
       },
     ],
     default: [],
@@ -52,19 +52,16 @@ export class Conversation {
   @Prop({
     type: {
       url: { type: String },
-      public_id: { type: String },
+      publicId: { type: String },
     },
   })
   avatar?: {
     url: string;
-    public_id: string;
+    publicId: string;
   };
 
   @Prop({ type: Types.ObjectId, ref: Message.name })
-  last_message?: Types.ObjectId | Message;
-
-  @Prop({ type: Date })
-  last_message_at?: Date;
+  lastMessage?: Types.ObjectId | Message;
 }
 export type ConversationDocument = Document & Conversation;
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);

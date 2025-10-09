@@ -42,9 +42,9 @@ export class ChatGateway
       const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-      client.data.user_id = payload.sub;
+      client.data.userId = payload.sub;
       const { directs } = await this.conversationService.getConversations(
-        client.data.user_id,
+        client.data.userId,
       );
       directs.forEach((c) => client.join(c._id.toString()));
     } catch {
@@ -59,71 +59,67 @@ export class ChatGateway
   @SubscribeMessage('conversation:typing')
   handleTyping(
     client: Socket,
-    payload: { conversation_id: string; user_id: string },
+    payload: { conversationId: string; userId: string },
   ) {
     this.server
-      .to(payload.conversation_id)
+      .to(payload.conversationId)
       .except(client.id)
       .emit('conversation:typing', payload);
-    console.log(payload.conversation_id);
   }
 
-  @SubscribeMessage('conversation:stop_typing')
+  @SubscribeMessage('conversation:stopTyping')
   handleStopTyping(
     client: Socket,
-    payload: { conversation_id: string; user_id: string },
+    payload: { conversationId: string; userId: string },
   ) {
     this.server
-      .to(payload.conversation_id)
+      .to(payload.conversationId)
       .except(client.id)
-      .emit('conversation:stop_typing', {
-        conversation_id: payload.conversation_id,
-        user_id: payload.user_id,
-      });
+      .emit('conversation:stop_typing', payload);
   }
 
   @SubscribeMessage('message:send')
   async handleSendMessage(
     client: Socket,
-    payload: { conversation_id: string; message: string },
+    payload: {
+      conversationId: string;
+      message: string;
+      replyMessageId: string;
+    },
   ) {
-    const user_id = client.data.user_id;
+    const userId = client.data.userId;
 
     const message = await this.messageService.createMessage({
-      user_id: user_id,
-      message: payload.message,
-      conversation_id: payload.conversation_id,
+      ...payload,
+      userId: userId,
     });
     const conversation = await this.conversationService.updateLastMessage({
-      conversation_id: payload.conversation_id,
-      message_id: message._id.toString(),
+      conversationId: payload.conversationId,
+      messageId: message._id.toString(),
     });
-    this.server.to(payload.conversation_id).emit('message:new', {
-      conversation_id: payload.conversation_id,
+    this.server.to(payload.conversationId).emit('message:new', {
+      conversationId: payload.conversationId,
       message: message,
     });
 
     this.server
-      .to(payload.conversation_id)
+      .to(payload.conversationId)
       .emit('conversation:updated', conversation);
   }
 
   @SubscribeMessage('message:seen')
   async handleSeenMessage(
     client: Socket,
-    payload: { conversation_id: string; message_id: string },
+    payload: { conversationId: string; messageId: string },
   ) {
-    const { conversation_id, message_id } = payload;
-    const user_id = client.data.user_id;
+    const userId = client.data.userId;
     await this.conversationService.updateSeenMessage({
-      conversation_id,
-      user_id,
-      message_id,
+      ...payload,
+      userId,
     });
-    this.server.to(payload.conversation_id).emit('message:seen:updated', {
-      conversation_id: payload.conversation_id,
-      user_id: user_id,
-      message_id: payload.message_id,
+    this.server.to(payload.conversationId).emit('message:seen:updated', {
+      ...payload,
+      userId,
     });
   }
 }

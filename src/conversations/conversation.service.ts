@@ -11,6 +11,7 @@ import {
 } from './conversation.schema';
 import { UpdateLastMessageDto, UpdateSeenMessageDto } from './conversation.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import { ConversationFullPopulated } from './types/conversationPopulated';
 
 @Injectable()
 export class ConversationService {
@@ -29,7 +30,7 @@ export class ConversationService {
     return conversation.participants;
   }
 
-  async getOrCreateConversation(user_id: string, other_user_id: string) {
+  async getOrCreateConversation(userId: string, otherUserId: string) {
     let conversation = await this.converModel
       .findOne({
         type: ConversationType.DIRECT,
@@ -37,9 +38,9 @@ export class ConversationService {
         participants: {
           $all: [
             {
-              $elemMatch: { user: new Types.ObjectId(user_id) },
+              $elemMatch: { user: new Types.ObjectId(userId) },
             },
-            { $elemMatch: { user: new Types.ObjectId(other_user_id) } },
+            { $elemMatch: { user: new Types.ObjectId(otherUserId) } },
           ],
         },
       })
@@ -47,27 +48,27 @@ export class ConversationService {
     if (!conversation) {
       conversation = await this.converModel.create({
         participants: [
-          { user: new Types.ObjectId(user_id) },
-          { user: new Types.ObjectId(other_user_id) },
+          { user: new Types.ObjectId(userId) },
+          { user: new Types.ObjectId(otherUserId) },
         ],
         last_message_at: new Date(),
       });
     }
     return {
-      conversation_id: conversation._id,
+      conversationId: conversation._id,
     };
   }
 
-  async getConversationById(conversation_id: string) {
-    if (!conversation_id) {
+  async getConversationById(conversationId: string) {
+    if (!conversationId) {
       throw new BadRequestException();
     }
     const conversation = await this.converModel
-      .findById(new Types.ObjectId(conversation_id))
+      .findById(new Types.ObjectId(conversationId))
       .sort({ last_message_at: -1, updatedAt: -1 })
       .populate('participants.user', 'full_name _id user_name avatar')
       .populate('last_message')
-      .lean<ConversationDocument>();
+      .lean<ConversationFullPopulated>();
     if (!conversation) {
       throw new NotFoundException();
     }
@@ -77,19 +78,16 @@ export class ConversationService {
     };
   }
 
-  async getConversations(user_id: string) {
+  async getConversations(userId: string) {
     const conversations = await this.converModel
       .find({
-        'participants.user': new Types.ObjectId(user_id),
-        last_message: { $ne: null, $exists: true },
+        'participants.user': new Types.ObjectId(userId),
+        lastMessasge: { $ne: null, $exists: true },
       })
-      .sort({ last_message_at: -1, updatedAt: -1 })
-      .populate(
-        'participants.user',
-        'full_name _id user_name avatar_url avatar_public_id',
-      )
-      .populate('last_message')
-      .lean<ConversationDocument[]>();
+      .sort({ createdAt: -1, updatedAt: -1 })
+      .populate('participants.user', 'fullName _id userName avatar')
+      .populate('lastMessage')
+      .lean<ConversationFullPopulated[]>();
 
     return {
       directs: conversations,
@@ -99,19 +97,16 @@ export class ConversationService {
   async updateLastMessage(dto: UpdateLastMessageDto) {
     const conversation = await this.converModel
       .findOneAndUpdate(
-        { _id: new Types.ObjectId(dto.conversation_id) },
+        { _id: new Types.ObjectId(dto.conversationId) },
         {
-          last_message: new Types.ObjectId(dto.message_id),
+          last_message: new Types.ObjectId(dto.messageId),
           last_message_at: new Date(),
         },
         { new: true },
       )
-      .populate(
-        'participants.user',
-        'full_name _id user_name avatar_url avatar_public_id',
-      )
-      .populate('last_message')
-      .lean<ConversationDocument>();
+      .populate('participants.user', 'fullName _id userName avatar')
+      .populate('lastMessage')
+      .lean<ConversationFullPopulated>();
     if (!conversation) {
       throw new NotFoundException();
     }
@@ -121,14 +116,12 @@ export class ConversationService {
   async updateSeenMessage(dto: UpdateSeenMessageDto) {
     return this.converModel.updateOne(
       {
-        _id: new Types.ObjectId(dto.conversation_id),
-        'participants.user': new Types.ObjectId(dto.user_id),
+        _id: new Types.ObjectId(dto.conversationId),
+        'participants.user': new Types.ObjectId(dto.userId),
       },
       {
         $set: {
-          'participants.$.last_seen_message': new Types.ObjectId(
-            dto.message_id,
-          ),
+          'participants.$.lastSeenMessage': new Types.ObjectId(dto.messageId),
         },
       },
     );

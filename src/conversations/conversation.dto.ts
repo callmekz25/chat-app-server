@@ -23,19 +23,19 @@ export class ConversationResponseDto {
 
 export class UpdateLastMessageDto {
   @IsNotEmpty()
-  conversation_id: string;
+  conversationId: string;
 
   @IsNotEmpty()
-  message_id: string;
+  messageId: string;
 }
 
 export class UpdateSeenMessageDto {
   @IsNotEmpty()
-  conversation_id: string;
+  conversationId: string;
 
   @IsNotEmpty()
-  user_id: string;
+  userId: string;
 
   @IsNotEmpty()
-  message_id: string;
+  messageId: string;
 }

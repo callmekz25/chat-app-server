@@ -5,7 +5,7 @@ import { Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class Note {
   @Prop({ required: true, type: Types.ObjectId, ref: User.name, unique: true })
-  user_id: Types.ObjectId;
+  user: Types.ObjectId;
   @Prop({ required: true })
   content: string;
 
@@ -14,7 +14,7 @@ export class Note {
     required: true,
     default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
   })
-  expires_at: Date;
+  expiresAt: Date;
 }
 
 export type NoteDocument = Note & Document;

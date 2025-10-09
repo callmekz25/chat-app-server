@@ -7,10 +7,10 @@ export class CreateUserDto {
   email: string;
 
   @IsNotEmpty({ message: 'Biệt danh không được trống' })
-  user_name: string;
+  userName: string;
 
   @IsNotEmpty({ message: 'Họ tên không được trống' })
-  full_name: string;
+  fullName: string;
 
   @IsNotEmpty({ message: 'Giới tính không được trống' })
   gender: Gender;

@@ -5,23 +5,23 @@ import { FollowService } from './follow.service';
 export class FollowController {
   constructor(private followService: FollowService) {}
 
-  @Get(':user_name/followers')
-  async getFollowers(@Param('user_name') user_name: string) {
-    return this.followService.getFollowers(user_name);
+  @Get(':userName/followers')
+  async getFollowers(@Param('userName') userName: string) {
+    return this.followService.getFollowers(userName);
   }
 
-  @Get(':user_name/followings')
-  async getFollowings(@Param('user_name') user_name: string) {
-    return this.followService.getFollowings(user_name);
+  @Get(':userName/followings')
+  async getFollowings(@Param('userName') userName: string) {
+    return this.followService.getFollowings(userName);
   }
 
-  @Post(':user_name/follow')
-  async followingUser(@Req() req, @Param('user_name') user_name: string) {
-    return this.followService.followUser(req.user.user_name, user_name);
+  @Post(':userName/follow')
+  async followingUser(@Req() req, @Param('userName') userName: string) {
+    return this.followService.followUser(req.user.userName, userName);
   }
 
-  @Post(':user_name/unfollow')
-  async unfollowingUser(@Req() req, @Param('user_name') user_name: string) {
-    return this.followService.unfollowUser(req.user.user_name, user_name);
+  @Post(':userName/unfollow')
+  async unfollowingUser(@Req() req, @Param('userName') userName: string) {
+    return this.followService.unfollowUser(req.user.userName, userName);
   }
 }

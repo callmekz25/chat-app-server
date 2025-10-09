@@ -25,14 +25,14 @@ export class AuthService {
     return user;
   }
 
-  async refreshToken(refresh_token: string) {
-    if (!refresh_token) {
+  async refreshToken(refreshToken: string) {
+    if (!refreshToken) {
       throw new UnauthorizedException('Không có refresh token');
     }
     let user: User | null = null;
     try {
       const payload: JwtPayload = await this.jwtService.verifyAsync(
-        refresh_token,
+        refreshToken,
         {
           secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         },
@@ -45,29 +45,29 @@ export class AuthService {
       throw new UnauthorizedException('Không tìm thấy người dùng');
     }
 
-    const access_token = await this.jwtService.signAsync({
+    const accessToken = await this.jwtService.signAsync({
       sub: user._id.toString(),
       email: user.email,
-      user_name: user.user_name,
+      userName: user.userName,
     });
-    return access_token;
+    return accessToken;
   }
 
   async login(user: UserDocument) {
     const payload = {
       sub: user._id.toString(),
       email: user.email,
-      user_name: user.user_name,
+      userName: user.userName,
     };
-    const access_token = await this.jwtService.signAsync(payload);
-    const refresh_token = await this.jwtService.signAsync(payload, {
+    const accessToken = await this.jwtService.signAsync(payload);
+    const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: '7d',
     });
 
     return {
-      access_token,
-      refresh_token,
+      accessToken,
+      refreshToken,
     };
   }
 

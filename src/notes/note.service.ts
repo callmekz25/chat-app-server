@@ -9,19 +9,19 @@ export class NoteService {
     @InjectModel(Note.name)
     private noteModel: Model<NoteDocument>,
   ) {}
-  async getByUserId(user_id: string) {
+  async getByUserId(userId: string) {
     return await this.noteModel
-      .findOne({ user_id: new Types.ObjectId(user_id) })
+      .findOne({ user_id: new Types.ObjectId(userId) })
       .lean<NoteDocument>();
   }
 
-  async addNote(user_id: string, content: string) {
-    await this.noteModel.deleteOne({ user_id: new Types.ObjectId(user_id) });
+  async addNote(userId: string, content: string) {
+    await this.noteModel.deleteOne({ userId: new Types.ObjectId(userId) });
 
     const note = await this.noteModel.create({
-      user_id: new Types.ObjectId(user_id),
+      userId: new Types.ObjectId(userId),
       content,
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
     return {
@@ -29,9 +29,9 @@ export class NoteService {
     };
   }
 
-  async deleteNote(user_id: string) {
+  async deleteNote(userId: string) {
     await this.noteModel.deleteOne({
-      user_id: new Types.ObjectId(user_id),
+      userId: new Types.ObjectId(userId),
     });
     return {
       message: 'Xoá note',
