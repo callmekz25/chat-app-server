@@ -65,7 +65,7 @@ export class ConversationService {
     const conversation = await this.converModel
       .findById(new Types.ObjectId(conversationId))
       .sort({ lastMessage: -1, updatedAt: -1 })
-      .populate('participants.user', 'full_name _id user_name avatar')
+      .populate('participants.user', 'fullName _id userName avatar')
       .populate('lastMessage')
       .lean<ConversationFullPopulated>();
     if (!conversation) {
