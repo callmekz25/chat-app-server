@@ -17,9 +17,12 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userService.findLocalByEmail(email);
+    if (!user) {
+      return null;
+    }
 
-    const isMatch = await compareHash(password, user?.providers[0].password);
-    if (!user || !isMatch) {
+    const isMatch = await compareHash(password, user.providers[0].password!);
+    if (!isMatch) {
       return null;
     }
     return user;
