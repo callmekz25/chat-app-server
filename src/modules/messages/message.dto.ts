@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
+import { MessageType } from './message.schema';
 
 export class CreateMessageDto {
   @IsNotEmpty()
@@ -12,6 +13,18 @@ export class CreateMessageDto {
 
   @IsOptional()
   replyMessageId: string;
+
+  @IsOptional()
+  attachments?: {
+    url: string;
+    publicId: string;
+    type: MessageType;
+    fileName?: string;
+    fileSize?: number;
+    duration?: number;
+    width?: number;
+    height?: number;
+  }[];
 }
 
 export class GetMessageDto {

@@ -1,4 +1,3 @@
-import { Conversation } from '@/modules/conversations/conversation.schema';
 import { User } from '@/modules/users/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
@@ -49,6 +48,35 @@ export class Message {
 
   @Prop()
   message: string;
+
+  @Prop({
+    type: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+        type: {
+          type: String,
+          enum: Object.values(MessageType),
+          required: true,
+        },
+        fileName: String,
+        fileSize: Number,
+        duration: Number,
+        width: Number,
+        height: Number,
+      },
+    ],
+  })
+  attachments?: {
+    url: string;
+    publicId: string;
+    type: MessageType;
+    fileName?: string;
+    fileSize?: number;
+    duration?: number;
+    width?: number;
+    height?: number;
+  }[];
 
   @Prop({ type: Boolean, default: false })
   isDeleted: boolean;
