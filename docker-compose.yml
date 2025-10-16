@@ -1,28 +1,10 @@
 services:
-  nest-server:
-    build: .
-    container_name: nest-server
-    command: yarn start:dev
-    ports:
-      - '5000:5000'
-    env_file:
-      - .env
-    volumes:
-      - ./src:/app/src
-      - /app/node_modules
-    depends_on:
-      - mongo
-    environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-
   mongo:
     image: mongo:7
     container_name: mongo
     restart: always
     ports:
-      - '27017:27017'
+      - '27018:27017'
     env_file:
       - ./.env
     environment:
