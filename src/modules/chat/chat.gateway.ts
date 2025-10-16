@@ -13,6 +13,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { MessageType } from '../messages/message.schema';
 
 @WebSocketGateway({
   cors: {
@@ -88,6 +89,16 @@ export class ChatGateway
       conversationId: string;
       message: string;
       replyMessageId: string;
+      attachments?: {
+        url: string;
+        publicId: string;
+        type: MessageType;
+        fileName?: string;
+        fileSize?: number;
+        duration?: number;
+        width?: number;
+        height?: number;
+      }[];
     },
   ) {
     const userId = client.data.userId;
