@@ -5,25 +5,31 @@ import {
   Post,
   Query,
   Req,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { UploadService } from './upload.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files', 10))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() req,
-    @Query() type: string,
+    @Query('type') type: string,
   ) {
-    console.log(file);
-    console.log(type);
+    const results = await Promise.all(
+      files.map((file) =>
+        this.uploadService.uploadFile(file, type, req.user.sub),
+      ),
+    );
+    console.log(results);
+
+    return results;
   }
 
   @Delete(':publicId')
