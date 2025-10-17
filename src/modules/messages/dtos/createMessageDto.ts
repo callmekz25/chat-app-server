@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { MessageType } from './message.schema';
+import { AttachmentType } from '../message.schema';
 
 export class CreateMessageDto {
   @IsNotEmpty()
@@ -12,25 +12,17 @@ export class CreateMessageDto {
   message: string;
 
   @IsOptional()
-  replyMessageId: string;
+  replyMessageId?: string;
 
   @IsOptional()
   attachments?: {
     url: string;
     publicId: string;
-    type: MessageType;
+    type: AttachmentType;
     fileName?: string;
     fileSize?: number;
     duration?: number;
     width?: number;
     height?: number;
   }[];
-}
-
-export class GetMessageDto {
-  @IsOptional()
-  before: string;
-
-  @IsOptional()
-  limit = 20;
 }

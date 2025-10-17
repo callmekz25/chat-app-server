@@ -10,6 +10,13 @@ export enum MessageType {
   VIDEO = 'video',
 }
 
+export enum AttachmentType {
+  IMAGE = 'image',
+  VOICE = 'voice',
+  FILE = 'file',
+  VIDEO = 'video',
+}
+
 @Schema({ timestamps: true })
 export class Message {
   @Prop({ type: Types.ObjectId, ref: User.name, required: true })
@@ -56,7 +63,7 @@ export class Message {
         publicId: { type: String },
         type: {
           type: String,
-          enum: Object.values(MessageType),
+          enum: Object.values(AttachmentType),
           required: true,
         },
         fileName: String,
