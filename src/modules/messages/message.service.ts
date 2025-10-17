@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message, MessageDocument } from './message.schema';
 import { Model, Types } from 'mongoose';
-import { CreateMessageDto, GetMessageDto } from './message.dto';
 import { ConversationService } from '@/modules/conversations/conversation.service';
 import { GetMessagesRes } from './types/message';
+import { CreateMessageDto } from './dtos/createMessageDto';
+import { GetMessageDto } from './dtos/getMessagesDto';
 
 @Injectable()
 export class MessageService {
@@ -14,14 +15,18 @@ export class MessageService {
     private readonly converService: ConversationService,
   ) {}
   async createMessage(dto: CreateMessageDto) {
-    const message = await this.messageModel.create({
+    const data: any = {
       conversationId: new Types.ObjectId(dto.conversationId),
       sendBy: new Types.ObjectId(dto.userId),
       message: dto.message,
-      ...(dto.replyMessageId
-        ? { replyMessageId: new Types.ObjectId(dto.replyMessageId) }
-        : {}),
-    });
+      attachments: dto.attachments || [],
+    };
+
+    if (dto.replyMessageId) {
+      data.replyMessage = new Types.ObjectId(dto.replyMessageId);
+    }
+
+    const message = await this.messageModel.create(data);
 
     return {
       ...message.toObject(),
