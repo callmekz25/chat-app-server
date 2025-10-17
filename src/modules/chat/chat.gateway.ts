@@ -1,6 +1,5 @@
 import { JwtPayload } from '@/modules/auth/types/jwt-payload';
 import { ConversationService } from '@/modules/conversations/conversation.service';
-import { CreateMessageDto } from '@/modules/messages/message.dto';
 import { MessageService } from '@/modules/messages/message.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -13,7 +12,8 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MessageType } from '../messages/message.schema';
+import { SendMessageDto } from './dtos/sendMessageDto';
+import { SeenMessageDto } from './dtos/seenMessageDto';
 
 @WebSocketGateway({
   cors: {
@@ -83,25 +83,9 @@ export class ChatGateway
   }
 
   @SubscribeMessage('message:send')
-  async handleSendMessage(
-    client: Socket,
-    payload: {
-      conversationId: string;
-      message: string;
-      replyMessageId: string;
-      attachments?: {
-        url: string;
-        publicId: string;
-        type: MessageType;
-        fileName?: string;
-        fileSize?: number;
-        duration?: number;
-        width?: number;
-        height?: number;
-      }[];
-    },
-  ) {
+  async handleSendMessage(client: Socket, payload: SendMessageDto) {
     const userId = client.data.userId;
+    console.log(payload);
 
     const message = await this.messageService.createMessage({
       ...payload,
@@ -115,6 +99,7 @@ export class ChatGateway
     this.server.to(payload.conversationId).emit('message:new', {
       conversationId: payload.conversationId,
       message: message,
+      tempId: payload.tempId,
     });
 
     this.server
@@ -123,10 +108,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('message:seen')
-  async handleSeenMessage(
-    client: Socket,
-    payload: { conversationId: string; messageId: string },
-  ) {
+  async handleSeenMessage(client: Socket, payload: SeenMessageDto) {
     const userId = client.data.userId;
     await this.conversationService.updateSeenMessage({
       ...payload,
