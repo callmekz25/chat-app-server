@@ -4,17 +4,16 @@ import { Types } from 'mongoose';
 
 export enum MessageType {
   TEXT = 'text',
-  IMAGE = 'image',
+  CALL = 'call',
+  CALLVIDEO = 'callvideo',
   VOICE = 'voice',
-  FILE = 'file',
-  VIDEO = 'video',
 }
 
 export enum AttachmentType {
   IMAGE = 'image',
-  VOICE = 'voice',
-  FILE = 'file',
+  DOCUMENT = 'document',
   VIDEO = 'video',
+  AUDIO = 'audio',
 }
 
 @Schema({ timestamps: true })
@@ -80,6 +79,7 @@ export class Message {
     type: MessageType;
     fileName?: string;
     fileSize?: number;
+    fileFormat?: string;
     duration?: number;
     width?: number;
     height?: number;

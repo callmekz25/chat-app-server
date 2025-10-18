@@ -5,7 +5,16 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class UploadService {
-  async uploadFile(file: Express.Multer.File, type: string, userId: string) {
+  private detectFileType(
+    mime: string,
+  ): 'image' | 'video' | 'audio' | 'document' {
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime.startsWith('audio/')) return 'audio';
+    return 'document';
+  }
+
+  async uploadFile(file: Express.Multer.File, userId: string) {
     if (!file) {
       throw new BadRequestException('File is required');
     }
@@ -15,10 +24,11 @@ export class UploadService {
     }
 
     try {
+      const type = this.detectFileType(file.mimetype);
       const folder = `chat/${userId}/${type}`;
       const result: UploadApiResponse = await new Promise((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
-          { folder },
+          { folder, resource_type: 'auto' },
           (error, result) => {
             if (error) reject(error);
             else resolve(result as UploadApiResponse);
@@ -27,12 +37,17 @@ export class UploadService {
 
         Readable.from(file.buffer).pipe(upload);
       });
-
-      return {
+      const baseResponse = {
         url: result.secure_url,
         publicId: result.public_id,
-        type: type,
+        type,
       };
+      if (result.resource_type === 'raw' || type === 'document') {
+        baseResponse['fileName'] = file.originalname;
+        baseResponse['fileSize'] = result.bytes;
+        baseResponse['fileFormat'] = result.format;
+      }
+      return baseResponse;
     } catch (error) {
       console.error('Cloudinary upload error:', error);
       await fs.unlink(file.path).catch((err) => {

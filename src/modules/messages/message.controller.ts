@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { GetMessagesRes } from './types/message';
 import { GetMessageDto } from './dtos/getMessagesDto';
@@ -9,14 +9,9 @@ export class MessageController {
 
   @Get(':conversationId')
   async getMessagesByConversationId(
-    @Req() req,
     @Param('conversationId') conversationId: string,
     @Query() dto: GetMessageDto,
   ): Promise<GetMessagesRes> {
-    return this.messageService.getMessagesByConversationId(
-      req.user.sub,
-      conversationId,
-      dto,
-    );
+    return this.messageService.getMessagesByConversationId(conversationId, dto);
   }
 }

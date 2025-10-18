@@ -85,7 +85,6 @@ export class ChatGateway
   @SubscribeMessage('message:send')
   async handleSendMessage(client: Socket, payload: SendMessageDto) {
     const userId = client.data.userId;
-    console.log(payload);
 
     const message = await this.messageService.createMessage({
       ...payload,

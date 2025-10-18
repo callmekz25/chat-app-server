@@ -20,6 +20,7 @@ export class MessageService {
       sendBy: new Types.ObjectId(dto.userId),
       message: dto.message,
       attachments: dto.attachments || [],
+      messageType: dto.messageType,
     };
 
     if (dto.replyMessageId) {
@@ -35,7 +36,6 @@ export class MessageService {
   }
 
   async getMessagesByConversationId(
-    userId: string,
     conversationId: string,
     dto: GetMessageDto,
   ): Promise<GetMessagesRes> {

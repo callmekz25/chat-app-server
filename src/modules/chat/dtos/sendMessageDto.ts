@@ -1,4 +1,4 @@
-import { AttachmentType } from '@/modules/messages/message.schema';
+import { AttachmentType, MessageType } from '@/modules/messages/message.schema';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SendMessageDto {
@@ -11,6 +11,9 @@ export class SendMessageDto {
   @IsNotEmpty()
   @IsString()
   message: string;
+
+  @IsNotEmpty()
+  messageType: MessageType;
 
   @IsOptional()
   replyMessageId?: string;
