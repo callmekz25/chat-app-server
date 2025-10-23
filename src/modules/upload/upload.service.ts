@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import * as fs from 'fs/promises';
 import { Readable } from 'stream';
+import slugify from 'slugify';
 
 @Injectable()
 export class UploadService {
@@ -26,9 +27,17 @@ export class UploadService {
     try {
       const type = this.detectFileType(file.mimetype);
       const folder = `chat/${userId}/${type}`;
+      const originalName = Buffer.from(file.originalname, 'latin1').toString(
+        'utf8',
+      );
+      const safeName = slugify(originalName, { lower: true });
       const result: UploadApiResponse = await new Promise((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
-          { folder, resource_type: 'auto' },
+          {
+            folder,
+            resource_type: type === 'document' ? 'raw' : 'auto',
+            public_id: safeName,
+          },
           (error, result) => {
             if (error) reject(error);
             else resolve(result as UploadApiResponse);
@@ -43,9 +52,8 @@ export class UploadService {
         type,
       };
       if (result.resource_type === 'raw' || type === 'document') {
-        baseResponse['fileName'] = file.originalname;
+        baseResponse['fileName'] = originalName;
         baseResponse['fileSize'] = result.bytes;
-        baseResponse['fileFormat'] = result.format;
       }
       return baseResponse;
     } catch (error) {

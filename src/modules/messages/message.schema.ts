@@ -76,10 +76,9 @@ export class Message {
   attachments?: {
     url: string;
     publicId: string;
-    type: MessageType;
+    type: AttachmentType;
     fileName?: string;
     fileSize?: number;
-    fileFormat?: string;
     duration?: number;
     width?: number;
     height?: number;
