@@ -53,6 +53,14 @@ export class MessageService {
 
     const docs = await this.messageModel
       .find(filter)
+      .populate({
+        path: 'replyMessage',
+        populate: {
+          path: 'sendBy',
+          model: 'User',
+        },
+      })
+      .populate('sendBy')
       .sort({ _id: -1 })
       .limit(limit)
       .lean();
