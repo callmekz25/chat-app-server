@@ -90,9 +90,11 @@ export class ChatGateway
       ...payload,
       userId: userId,
     });
+
+    const messageId = message._id?.toString();
     const conversation = await this.conversationService.updateLastMessage({
       conversationId: payload.conversationId,
-      messageId: message._id.toString(),
+      messageId: messageId,
     });
 
     this.server.to(payload.conversationId).emit('message:new', {

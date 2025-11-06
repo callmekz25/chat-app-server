@@ -66,7 +66,12 @@ export class ConversationService {
       .findById(new Types.ObjectId(conversationId))
       .sort({ lastMessage: -1, updatedAt: -1 })
       .populate('participants.user', 'fullName _id userName avatar')
-      .populate('lastMessage')
+      .populate({
+        path: 'lastMessage',
+        populate: {
+          path: 'sendBy',
+        },
+      })
       .lean<ConversationFullPopulated>();
     if (!conversation) {
       throw new NotFoundException();
@@ -85,7 +90,12 @@ export class ConversationService {
       })
       .sort({ createdAt: -1, updatedAt: -1 })
       .populate('participants.user', 'fullName _id userName avatar')
-      .populate('lastMessage')
+      .populate({
+        path: 'lastMessage',
+        populate: {
+          path: 'sendBy',
+        },
+      })
       .lean<ConversationFullPopulated[]>();
 
     return {
@@ -103,7 +113,12 @@ export class ConversationService {
         { new: true },
       )
       .populate('participants.user', 'fullName _id userName avatar')
-      .populate('lastMessage')
+      .populate({
+        path: 'lastMessage',
+        populate: {
+          path: 'sendBy',
+        },
+      })
       .lean<ConversationFullPopulated>();
     if (!conversation) {
       throw new NotFoundException();

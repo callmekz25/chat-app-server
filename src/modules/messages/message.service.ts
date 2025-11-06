@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message, MessageDocument } from './message.schema';
 import { Model, Types } from 'mongoose';
@@ -6,6 +6,7 @@ import { ConversationService } from '@/modules/conversations/conversation.servic
 import { GetMessagesRes } from './types/message';
 import { CreateMessageDto } from './dtos/createMessageDto';
 import { GetMessageDto } from './dtos/getMessagesDto';
+import { MessageDto } from './dtos/messageDto';
 
 @Injectable()
 export class MessageService {
@@ -29,8 +30,20 @@ export class MessageService {
 
     const message = await this.messageModel.create(data);
 
+    const populatedMessage = await this.messageModel
+      .findById(message._id)
+      .populate('sendBy')
+      .populate({
+        path: 'replyMessage',
+        populate: { path: 'sendBy' },
+      })
+      .lean<MessageDto>();
+
+    if (!populatedMessage) {
+      throw new BadRequestException();
+    }
     return {
-      ...message.toObject(),
+      ...populatedMessage,
       seenBy: [],
     };
   }

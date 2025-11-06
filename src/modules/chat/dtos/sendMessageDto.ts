@@ -6,7 +6,7 @@ export class SendMessageDto {
   conversationId: string;
 
   @IsNotEmpty()
-  tempId: string;
+  tempId: string | null;
 
   @IsNotEmpty()
   @IsString()
