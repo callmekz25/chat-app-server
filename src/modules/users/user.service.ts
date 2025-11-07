@@ -65,8 +65,11 @@ export class UserService {
     return result as User | null;
   }
 
-  async findAll(): Promise<GetUserDto[]> {
-    return await this.userModel.find().populate('providers');
+  async findAll(userId: string): Promise<GetUserDto[]> {
+    return await this.userModel
+      .find({ _id: { $ne: new Types.ObjectId(userId) } })
+      .populate('providers')
+      .lean();
   }
   async isEmailExist(email: string) {
     const user = await this.userModel.findOne({ email }).lean();

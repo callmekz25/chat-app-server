@@ -20,9 +20,9 @@ export class ConversationService {
     private readonly converModel: Model<ConversationDocument>,
   ) {}
 
-  async getParticipants(conversation_id: string) {
+  async getParticipants(conversationId: string) {
     const conversation = await this.converModel
-      .findById(new Types.ObjectId(conversation_id))
+      .findById(new Types.ObjectId(conversationId))
       .lean<ConversationDocument>();
     if (!conversation) {
       throw new NotFoundException();

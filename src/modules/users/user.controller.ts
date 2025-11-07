@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -6,9 +6,8 @@ import { Public } from '../auth/decorators/public.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Public()
   @Get()
-  async findAll() {
-    return this.userService.findAll();
+  async findAll(@Req() req) {
+    return this.userService.findAll(req.user.sub);
   }
 }
