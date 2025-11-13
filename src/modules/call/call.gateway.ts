@@ -5,6 +5,9 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ConversationService } from '../conversations/conversation.service';
+import { OfferPayloadDto } from './dtos/offerPayloadDto';
+import { AnswerPayloadDto } from './dtos/answerPayloadDto';
+import { ICEPayloadDto } from './dtos/icePayloadDto';
 
 @WebSocketGateway({ cors: true })
 export class CallGateway {
@@ -20,22 +23,13 @@ export class CallGateway {
   }
 
   @SubscribeMessage('call:offer')
-  async handleOffer(
-    client: Socket,
-    payload: {
-      conversationId: string;
-      offer: RTCSessionDescriptionInit;
-      callerId: string;
-      callerName: string;
-    },
-  ) {
+  async handleOffer(client: Socket, payload: OfferPayloadDto) {
     console.log('Offer');
 
     try {
       const participants = await this.conversationService.getParticipants(
         payload.conversationId,
       );
-      console.log('participants:', participants);
 
       for (const p of participants) {
         const userId = p.user._id.toString();
@@ -56,10 +50,7 @@ export class CallGateway {
   }
 
   @SubscribeMessage('call:answer')
-  handleAnswer(
-    client: Socket,
-    payload: { to: string; answer: RTCSessionDescriptionInit; userId: string },
-  ) {
+  handleAnswer(client: Socket, payload: AnswerPayloadDto) {
     console.log('Answer');
     const targetSocket = this.userSocketMap.get(payload.to);
     if (targetSocket) {
@@ -71,12 +62,11 @@ export class CallGateway {
   }
 
   @SubscribeMessage('call:ice-candidate')
-  handleCandidate(
-    client: Socket,
-    payload: { to: string; candidate: RTCIceCandidateInit; userId: string },
-  ) {
+  handleCandidate(client: Socket, payload: ICEPayloadDto) {
     const targetSocket = this.userSocketMap.get(payload.to);
     if (targetSocket) {
+      console.log('ICE');
+
       this.server.to(targetSocket).emit('call:ice-candidate', {
         from: payload.userId,
         candidate: payload.candidate,

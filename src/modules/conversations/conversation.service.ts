@@ -23,7 +23,8 @@ export class ConversationService {
   async getParticipants(conversationId: string) {
     const conversation = await this.converModel
       .findById(new Types.ObjectId(conversationId))
-      .lean<ConversationDocument>();
+      .populate('participants.user', 'fullName _id userName avatar')
+      .lean<ConversationFullPopulated>();
     if (!conversation) {
       throw new NotFoundException();
     }
